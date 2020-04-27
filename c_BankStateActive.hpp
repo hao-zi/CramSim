@@ -1,8 +1,8 @@
-// Copyright 2009-2019 NTESS. Under the terms
+// Copyright 2009-2020 NTESS. Under the terms
 // of Contract DE-NA0003525 with NTESS, the U.S.
 // Government retains certain rights in this software.
 //
-// Copyright (c) 2009-2019, NTESS
+// Copyright (c) 2009-2020, NTESS
 // All rights reserved.
 //
 // Portions are copyright of other developers:
@@ -36,47 +36,41 @@
 #include "c_BankCommand.hpp"
 
 namespace SST {
-    namespace n_Bank {
+namespace CramSim {
 
-        class c_BankStateRead;
+class c_BankStateRead;
+class c_BankStateReadA;
+class c_BankStateWrite;
+class c_BankStateWriteA;
 
-        class c_BankStateReadA;
+class c_BankStateActive: public c_BankState {
 
-        class c_BankStateWrite;
+public:
 
-        class c_BankStateWriteA;
+	c_BankStateActive(std::map<std::string, unsigned>* x_bankParams);
+	~c_BankStateActive();
 
-        class c_BankStateActive : public c_BankState {
+	virtual void handleCommand(c_BankInfo* x_bank, c_BankCommand* x_bankCommandPtr, SimTime_t x_simCycle);
 
-        public:
+	virtual void clockTic(c_BankInfo* x_bank, SimTime_t x_simCycle);
 
-            c_BankStateActive(std::map<std::string, unsigned> *x_bankParams);
+	virtual void enter(c_BankInfo* x_bank, c_BankState* x_prevState, c_BankCommand* x_cmdPtr, SimTime_t x_simCycle);
 
-            ~c_BankStateActive();
+	virtual std::list<e_BankCommandType> getAllowedCommands();
 
-            virtual void handleCommand(c_BankInfo *x_bank, c_BankCommand *x_bankCommandPtr,
-                                       SimTime_t x_simCycle);
+	virtual bool isCommandAllowed(c_BankCommand* x_cmdPtr,
+			c_BankInfo* x_bankPtr);
 
-            virtual void clockTic(c_BankInfo *x_bank, SimTime_t x_simCycle);
+private:
 
-            virtual void enter(c_BankInfo *x_bank, c_BankState *x_prevState,
-                               c_BankCommand *x_cmdPtr, SimTime_t x_simCycle);
+	std::list<e_BankCommandType> m_allowedCommands;
+	c_BankCommand* m_receivedCommandPtr; //<! pointer to command received after entering this state
+	c_BankCommand* m_prevCommandPtr;
+	c_BankState* m_nextStatePtr;
+	SimTime_t m_timer;
 
-            virtual std::list <e_BankCommandType> getAllowedCommands();
-
-            virtual bool isCommandAllowed(c_BankCommand *x_cmdPtr,
-                                          c_BankInfo *x_bankPtr);
-
-        private:
-
-            std::list <e_BankCommandType> m_allowedCommands;
-            c_BankCommand *m_receivedCommandPtr; //<! pointer to command received after entering this state
-            c_BankCommand *m_prevCommandPtr;
-            c_BankState *m_nextStatePtr;
-            SimTime_t m_timer;
-
-        };
-    } // namespace n_Bank
+};
+} // namespace CramSim
 } // namespace SST
 
 #endif // C_BANKSTATEACTIVE_HPP

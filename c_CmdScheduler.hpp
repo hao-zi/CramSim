@@ -1,8 +1,8 @@
-// Copyright 2009-2019 NTESS. Under the terms
+// Copyright 2009-2020 NTESS. Under the terms
 // of Contract DE-NA0003525 with NTESS, the U.S.
 // Government retains certain rights in this software.
 //
-// Copyright (c) 2009-2019, NTESS
+// Copyright (c) 2009-2020, NTESS
 // All rights reserved.
 //
 // Portions are copyright of other developers:
@@ -35,26 +35,28 @@
 #include "c_HashedAddress.hpp"
 #include "c_Controller.hpp"
 
-namespace SST {
-    namespace n_Bank {
+namespace SST{
+    namespace CramSim {
         class c_DeviceDriver;
-
         class c_Controller;
 
-        class c_CmdScheduler : public SubComponent {
+        class c_CmdScheduler : public SubComponent{
         public:
 
-            SST_ELI_REGISTER_SUBCOMPONENT(
+            SST_ELI_REGISTER_SUBCOMPONENT_API(SST::CramSim::c_CmdScheduler, Output*, c_DeviceDriver*)
+
+            SST_ELI_REGISTER_SUBCOMPONENT_DERIVED(
                 c_CmdScheduler,
-            "CramSim",
-            "c_CmdScheduler",
-            SST_ELI_ELEMENT_VERSION(1,0,0),
-            "Command Scheduler",
-            "SST::CramSim::Controller::CmdScheduler"
+                "CramSim",
+                "c_CmdScheduler",
+                SST_ELI_ELEMENT_VERSION(1,0,0),
+                "Command Scheduler",
+                SST::CramSim::c_CmdScheduler
             )
 
             SST_ELI_DOCUMENT_PARAMS(
-            { "numCmdQEntries", "The number of entries in command scheduler's command queue" },
+                {"numCmdQEntries", "The number of entries in command scheduler's command queue"},
+                {"cmdSchedulingPolicy", "", "BANK"}
             )
 
             SST_ELI_DOCUMENT_PORTS(
@@ -63,30 +65,25 @@ namespace SST {
             SST_ELI_DOCUMENT_STATISTICS(
             )
 
-            c_CmdScheduler(Component *comp, Params &x_params);
-
+            c_CmdScheduler(ComponentId_t id, Params &x_params, Output* out, c_DeviceDriver*);
+            void build(Params &x_params);
             ~c_CmdScheduler();
 
-            void run();
-
-            bool push(c_BankCommand *x_cmd);
-
+            void run(SimTime_t simCycle);
+            bool push(c_BankCommand* x_cmd);
             unsigned getToken(const c_HashedAddress &x_addr);
 
 
         private:
-            enum e_SchedulingPolicy {
-                BANK, RANK
-            };
-            typedef std::deque<c_BankCommand *> c_CmdQueue;
+            enum e_SchedulingPolicy {BANK, RANK};
+            typedef std::deque<c_BankCommand*> c_CmdQueue;
 
-            c_Controller *m_owner;
-            c_DeviceDriver *m_deviceController;
+            c_DeviceDriver* m_deviceController;
 
-            std::vector <std::vector<c_CmdQueue>> m_cmdQueues;  //per-bank command queue for each channel
+            std::vector<std::vector<c_CmdQueue>> m_cmdQueues;  //per-bank command queue for each channel
             std::vector<unsigned> m_nextCmdQIdx;                //index for command queue scheduling (Round Robin)
 
-            Output *output;
+            Output* output;
             unsigned m_numBanks;
             unsigned m_numChannels;
             unsigned m_numRanksPerChannel;

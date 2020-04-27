@@ -1,8 +1,8 @@
-// Copyright 2009-2019 NTESS. Under the terms
+// Copyright 2009-2020 NTESS. Under the terms
 // of Contract DE-NA0003525 with NTESS, the U.S.
 // Government retains certain rights in this software.
 //
-// Copyright (c) 2009-2019, NTESS
+// Copyright (c) 2009-2020, NTESS
 // All rights reserved.
 //
 // Portions are copyright of other developers:
@@ -36,65 +36,60 @@
 #include "c_TxnReqEvent.hpp"
 #include "c_TxnResEvent.hpp"
 
-namespace SST {
-    namespace n_Bank {
+namespace SST{
+    namespace CramSim{
 
-        class c_TxnDispatcher : public SST::Component {
-        public:
+         class c_TxnDispatcher : public SST::Component {
+         public:
 
-            SST_ELI_REGISTER_COMPONENT(
+             SST_ELI_REGISTER_COMPONENT(
                 c_TxnDispatcher,
-            "CramSim",
-            "c_TxnDispatcher",
-            SST_ELI_ELEMENT_VERSION(1,0,0),
-            "Transaction dispatcher",
-            COMPONENT_CATEGORY_UNCATEGORIZED
+                "CramSim",
+                "c_TxnDispatcher",
+                SST_ELI_ELEMENT_VERSION(1,0,0),
+                "Transaction dispatcher",
+                COMPONENT_CATEGORY_UNCATEGORIZED
             )
 
             SST_ELI_DOCUMENT_PARAMS(
-            { "numLanes", "Total number of lanes", NULL },
-            { "laneIdxPosition", "Bit posiiton of the lane index in the address.. [End:Start]", NULL },
+                {"numLanes", "Total number of lanes", NULL},
+                {"laneIdxPosition", "Bit posiiton of the lane index in the address.. [End:Start]", NULL},
             )
 
             SST_ELI_DOCUMENT_PORTS(
-            { "txnGen", "link to/from a transaction generator", {"MemEvent"}},
-            { "lane_%(lanes)d", "link to/from lanes", {"MemEvent"}},
+                { "txnGen", "link to/from a transaction generator", {"MemEvent"} },
+                { "lane_%(lanes)d", "link to/from lanes",  {"MemEvent"} },
             )
 
-            c_TxnDispatcher(ComponentId_t id, Params &params);
+             c_TxnDispatcher( ComponentId_t id, Params& params);
+             ~c_TxnDispatcher();
 
-            ~c_TxnDispatcher();
+         private:
+             c_TxnDispatcher();
 
-        private:
-            c_TxnDispatcher();
+             virtual bool clockTic(Cycle_t);
+             void handleTxnGenEvent(SST::Event *ev);
+             void handleCtrlEvent(SST::Event *ev);
+             void sendRequest(c_TxnReqEvent *ev);
+             void sendResponse(c_TxnResEvent *ev);
 
-            virtual bool clockTic(Cycle_t);
+             uint32_t getLaneIdx(uint64_t x_addr);
 
-            void handleTxnGenEvent(SST::Event *ev);
+             SimTime_t m_simCycle;
 
-            void handleCtrlEvent(SST::Event *ev);
+             SST::Link *m_txnGenLink;
+             std::vector<SST::Link*> m_laneLinks;
 
-            void sendRequest(c_TxnReqEvent *ev);
+             std::deque<c_TxnReqEvent*> m_reqQ;
+             std::deque<c_TxnResEvent*> m_resQ;
 
-            void sendResponse(c_TxnResEvent *ev);
+             uint32_t m_laneIdxStart;
+             uint32_t m_laneIdxEnd;
+             uint64_t m_laneIdxMask;
 
-            uint32_t getLaneIdx(uint64_t x_addr);
-
-            SimTime_t m_simCycle;
-
-            SST::Link *m_txnGenLink;
-            std::vector<SST::Link *> m_laneLinks;
-
-            std::deque<c_TxnReqEvent *> m_reqQ;
-            std::deque<c_TxnResEvent *> m_resQ;
-
-            uint32_t m_laneIdxStart;
-            uint32_t m_laneIdxEnd;
-            uint64_t m_laneIdxMask;
-
-            uint32_t k_numLanes;
-            Output dbg;
-        };
+             uint32_t k_numLanes;
+             Output dbg;
+         };
     }
 }
 

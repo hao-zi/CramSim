@@ -1,8 +1,8 @@
-// Copyright 2009-2019 NTESS. Under the terms
+// Copyright 2009-2020 NTESS. Under the terms
 // of Contract DE-NA0003525 with NTESS, the U.S.
 // Government retains certain rights in this software.
 //
-// Copyright (c) 2009-2019, NTESS
+// Copyright (c) 2009-2020, NTESS
 // All rights reserved.
 //
 // Portions are copyright of other developers:
@@ -44,51 +44,47 @@
 //#include "c_BankCommand.hpp"
 
 namespace SST {
-    namespace n_Bank {
+namespace CramSim {
 
-        class c_Rank;
+class c_Rank;
+class c_BankCommand;
 
-        class c_BankCommand;
+class c_Channel {
+public:
 
-        class c_Channel {
-        public:
+	friend std::ostream& operator<<(std::ostream& x_stream,
+			const c_Channel& x_channel) {
+		x_stream << "Rank:" << std::endl;
+		for (unsigned l_i = 0; l_i < x_channel.m_rankPtrs.size(); ++l_i) {
+			x_stream << (x_channel.m_rankPtrs.at(l_i)) << std::endl;
+		}
 
-            friend std::ostream &operator<<(std::ostream &x_stream,
-                                            const c_Channel &x_channel) {
-                x_stream << "Rank:" << std::endl;
-                for (unsigned l_i = 0; l_i < x_channel.m_rankPtrs.size(); ++l_i) {
-                    x_stream << (x_channel.m_rankPtrs.at(l_i)) << std::endl;
-                }
+		return x_stream;
+	}
 
-                return x_stream;
-            }
+	c_Channel(std::map<std::string, unsigned>* x_bankParams);
+	c_Channel(std::map<std::string, unsigned>* x_bankParams, unsigned x_chId);
 
-            c_Channel(std::map<std::string, unsigned> *x_bankParams);
+	virtual ~c_Channel();
 
-            c_Channel(std::map<std::string, unsigned> *x_bankParams, unsigned x_chId);
+	void acceptRank(c_Rank* x_rankPtr);
 
-            virtual ~c_Channel();
+	unsigned getNumBanks() const;
+	unsigned getNumRanks() const;
+	unsigned getChannelId() const;
 
-            void acceptRank(c_Rank *x_rankPtr);
+	std::vector<c_BankInfo*> getBankPtrs() const;
 
-            unsigned getNumBanks() const;
+	void updateOtherBanksNextCommandCycles(c_Rank* x_initRankPtr,
+			c_BankCommand* x_cmdPtr, SimTime_t x_cycle);
 
-            unsigned getNumRanks() const;
+private:
+	std::vector<c_Rank*> m_rankPtrs;
+	std::map<std::string, unsigned>* m_bankParams;
+	unsigned m_chId;
 
-            unsigned getChannelId() const;
+};
 
-            std::vector<c_BankInfo *> getBankPtrs() const;
-
-            void updateOtherBanksNextCommandCycles(c_Rank *x_initRankPtr,
-                                                   c_BankCommand *x_cmdPtr, SimTime_t x_cycle);
-
-        private:
-            std::vector<c_Rank *> m_rankPtrs;
-            std::map<std::string, unsigned> *m_bankParams;
-            unsigned m_chId;
-
-        };
-
-    } // end n_Bank
+} // end CramSim
 } // end SST
 #endif /* C_CHANNEL_HPP_ */

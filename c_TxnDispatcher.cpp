@@ -1,8 +1,8 @@
-// Copyright 2009-2019 NTESS. Under the terms
+// Copyright 2009-2020 NTESS. Under the terms
 // of Contract DE-NA0003525 with NTESS, the U.S.
 // Government retains certain rights in this software.
 //
-// Copyright (c) 2009-2019, NTESS
+// Copyright (c) 2009-2020, NTESS
 // All rights reserved.
 //
 // Portions are copyright of other developers:
@@ -35,27 +35,27 @@
 
 using namespace std;
 using namespace SST;
-using namespace SST::n_Bank;
+using namespace SST::CramSim;
 
-c_TxnDispatcher::c_TxnDispatcher(ComponentId_t x_id, Params &params) : Component(x_id) {
+c_TxnDispatcher::c_TxnDispatcher(ComponentId_t x_id, Params &params):Component(x_id) {
     //*------ get parameters ----*//
-    bool l_found = false;
+    bool l_found=false;
 
-    m_simCycle = 0;
+    m_simCycle=0;
 
-    dbg.init("[TxnDispatcher]", params.find<int>("debug_level", 0), 0,
-             (Output::output_location_t) params.find<int>("debug_location", Output::STDOUT));
+    dbg.init("[TxnDispatcher]",params.find<int>("debug_level",0),0,
+             (Output::output_location_t)params.find<int>("debug_location",Output::STDOUT));
 
-    k_numLanes = (uint32_t) params.find<uint32_t>("numLanes", 1, l_found);
+    k_numLanes= (uint32_t) params.find<uint32_t>("numLanes", 1, l_found);
     if (!l_found) {
         cout << "numLanes param value is missing... exiting"
-             << endl;
+                  << endl;
         exit(-1);
     }
-    assert(k_numLanes > 0);
+    assert(k_numLanes>0);
 
     string l_laneIdxString = (string) params.find<string>("laneIdxPos", "13:12", l_found);
-    if (k_numLanes > 1) {
+    if(k_numLanes>1) {
         if (!l_found) {
             cout << "the bit position of lane index is not specified... it should be \"end:start\""
                  << endl;
@@ -65,7 +65,7 @@ c_TxnDispatcher::c_TxnDispatcher(ComponentId_t x_id, Params &params) : Component
             stringstream string_stream;
             string_stream.str(l_laneIdxString);
             string item;
-            vector <string> strings;
+            vector<string> strings;
             while (getline(string_stream, item, ':')) {
                 strings.push_back(item);
             }
@@ -76,7 +76,7 @@ c_TxnDispatcher::c_TxnDispatcher(ComponentId_t x_id, Params &params) : Component
             } else {
                 m_laneIdxEnd = atoi(strings[0].c_str());
                 m_laneIdxStart = atoi(strings[1].c_str());
-                m_laneIdxMask = ~((int64_t) - 1 << (m_laneIdxEnd + 1));
+                m_laneIdxMask = ~((int64_t) -1 << (m_laneIdxEnd + 1));
                 if (m_laneIdxEnd < m_laneIdxStart) {
                     cout << "landIdxPos error!!"
                          << "End position: " << m_laneIdxEnd
@@ -87,8 +87,7 @@ c_TxnDispatcher::c_TxnDispatcher(ComponentId_t x_id, Params &params) : Component
             }
         }
     }
-    std::string l_clockFreqStr = (std::string) params.find<std::string>("ClockFreq", "1GHz",
-                                                                        l_found);
+    std::string l_clockFreqStr = (std::string)params.find<std::string>("ClockFreq", "1GHz", l_found);
 
 
     //set our clock
@@ -97,46 +96,46 @@ c_TxnDispatcher::c_TxnDispatcher(ComponentId_t x_id, Params &params) : Component
 
 
     //---- configure link ----//
-    m_txnGenLink = configureLink("txnGen", new Event::Handler<c_TxnDispatcher>(this,
-                                                                               &c_TxnDispatcher::handleTxnGenEvent));
-    if (!m_txnGenLink) {
-        cout << "txnGen link is not found.. exit";
+    m_txnGenLink = configureLink("txnGen",new Event::Handler<c_TxnDispatcher>(this,&c_TxnDispatcher::handleTxnGenEvent));
+    if(!m_txnGenLink) {
+        cout<<"txnGen link is not found.. exit";
         exit(-1);
     }
 
     for (int i = 0; i < k_numLanes; i++) {
         string l_linkName = "lane_" + to_string(i);
-        Link *l_link = configureLink(l_linkName, new Event::Handler<c_TxnDispatcher>(this,
-                                                                                     &c_TxnDispatcher::handleCtrlEvent));
+        Link *l_link = configureLink(l_linkName,new Event::Handler<c_TxnDispatcher>(this, &c_TxnDispatcher::handleCtrlEvent));
 
         if (l_link) {
             m_laneLinks.push_back(l_link);
-            cout << l_linkName << " is connected" << endl;
+            cout<<l_linkName<<" is connected"<<endl;
         } else {
-            cout << l_linkName << " is not found.. exit" << endl;
+            cout<<l_linkName<<" is not found.. exit"<<endl;
             exit(-1);
         }
     }
 
 }
-
-c_TxnDispatcher::~c_TxnDispatcher() {}
+c_TxnDispatcher::~c_TxnDispatcher(){}
 
 c_TxnDispatcher::c_TxnDispatcher() :
-    Component(-1) {
+        Component(-1) {
     // for serialization only
 }
 
 
-bool c_TxnDispatcher::clockTic(Cycle_t clock) {
+bool c_TxnDispatcher::clockTic(Cycle_t clock)
+{
     m_simCycle++;
 
-    while (!m_reqQ.empty()) {
+    while(!m_reqQ.empty())
+    {
         sendRequest(m_reqQ.front());
         m_reqQ.pop_front();
     }
 
-    while (!m_resQ.empty()) {
+    while(!m_resQ.empty())
+    {
         sendResponse(m_resQ.front());
         m_resQ.pop_front();
     }
@@ -145,47 +144,52 @@ bool c_TxnDispatcher::clockTic(Cycle_t clock) {
 }
 
 
-void c_TxnDispatcher::handleTxnGenEvent(SST::Event *ev) {
+void c_TxnDispatcher::handleTxnGenEvent(SST::Event *ev)
+{
     //get a lane index
-    c_TxnReqEvent *l_newReq = dynamic_cast<c_TxnReqEvent *>(ev);
+    c_TxnReqEvent* l_newReq=dynamic_cast<c_TxnReqEvent*>(ev);
     m_reqQ.push_back(l_newReq);
 
-#ifdef __SST_DEBUG_OUTPUT__
+    #ifdef __SST_DEBUG_OUTPUT__
     l_newReq->m_payload->print(&dbg,"[c_TxnDispatcher.handleTxnGenEvent]",m_simCycle);
-#endif
+    #endif
 }
 
 
-void c_TxnDispatcher::handleCtrlEvent(SST::Event *ev) {
-    c_TxnResEvent *l_newRes = dynamic_cast<c_TxnResEvent *>(ev);
+void c_TxnDispatcher::handleCtrlEvent(SST::Event *ev)
+{
+    c_TxnResEvent* l_newRes=dynamic_cast<c_TxnResEvent*>(ev);
     m_resQ.push_back(l_newRes);
 }
 
 
-uint32_t c_TxnDispatcher::getLaneIdx(uint64_t x_addr) {
-    if (k_numLanes == 1)
+uint32_t c_TxnDispatcher::getLaneIdx(uint64_t x_addr)
+{
+    if(k_numLanes==1)
         return 0;
     else
         return (m_laneIdxMask & x_addr) >> m_laneIdxStart;
 }
 
 
-void c_TxnDispatcher::sendRequest(c_TxnReqEvent *x_newReq) {
+void c_TxnDispatcher::sendRequest(c_TxnReqEvent* x_newReq)
+{
     uint64_t l_addr = x_newReq->m_payload->getAddress();
     uint32_t l_laneIdx = getLaneIdx(l_addr);
 
     assert(l_laneIdx < m_laneLinks.size());
 
-#ifdef __SST_DEBUG_OUTPUT__
+    #ifdef __SST_DEBUG_OUTPUT__
     dbg.verbose(CALL_INFO,1,0," Cycle:%lld, LaneIdxPosition:[%d:%d] Addr: 0x%llx LaneIdx: %d\n",
              m_simCycle,m_laneIdxEnd,m_laneIdxStart,l_addr,l_laneIdx);
-#endif
+    #endif
 
     //send the event to a target lane
     m_laneLinks[l_laneIdx]->send(x_newReq);
 }
 
 
-void c_TxnDispatcher::sendResponse(c_TxnResEvent *x_newRes) {
+void c_TxnDispatcher::sendResponse(c_TxnResEvent* x_newRes)
+{
     m_txnGenLink->send(x_newRes);
 }

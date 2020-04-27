@@ -1,8 +1,8 @@
-// Copyright 2009-2019 NTESS. Under the terms
+// Copyright 2009-2020 NTESS. Under the terms
 // of Contract DE-NA0003525 with NTESS, the U.S.
 // Government retains certain rights in this software.
 //
-// Copyright (c) 2009-2019, NTESS
+// Copyright (c) 2009-2020, NTESS
 // All rights reserved.
 //
 // Portions are copyright of other developers:
@@ -39,26 +39,27 @@
 #include "c_DeviceDriver.hpp"
 
 using namespace SST;
-using namespace SST::n_Bank;
+using namespace SST::CramSim;
 
-c_CmdScheduler::c_CmdScheduler(Component *comp, Params &x_params) : SubComponent(comp) {
-    m_owner = dynamic_cast<c_Controller *>(comp);
-    m_deviceController = m_owner->getDeviceDriver();
-    output = dynamic_cast<c_Controller *>(comp)->getOutput();
-    //create command queue
-    m_numBanks = m_owner->getDeviceDriver()->getTotalNumBank();
-    m_numChannels = m_owner->getDeviceDriver()->getNumChannel();
-    m_numRanksPerChannel = m_owner->getDeviceDriver()->getNumRanksPerChannel();
-    m_numBanksPerChannel = m_numBanks / m_numChannels;
-    m_numBanksPerRank = m_numBanks / m_numRanksPerChannel;
 
-    assert(m_numBanks > 0);
+c_CmdScheduler::c_CmdScheduler(ComponentId_t id, Params &x_params, Output* out, c_DeviceDriver* driver) : SubComponent(id), output(out), m_deviceController(driver) {
+    build(x_params);
+}
+
+void c_CmdScheduler::build(Params &x_params) {
+    m_numBanks=m_deviceController->getTotalNumBank();
+    m_numChannels=m_deviceController->getNumChannel();
+    m_numRanksPerChannel=m_deviceController->getNumRanksPerChannel();
+    m_numBanksPerChannel=m_numBanks/m_numChannels;
+    m_numBanksPerRank = m_numBanks/m_numRanksPerChannel;
+
+    assert(m_numBanks>0);
     m_cmdQueues.clear();
 
     m_cmdQueues.resize(m_numChannels);
     m_nextCmdQIdx.resize(m_numChannels);
-    for (unsigned l_ch = 0; l_ch < m_numChannels; l_ch++) {
-        m_nextCmdQIdx.at(l_ch) = 0;
+    for(unsigned l_ch=0;l_ch<m_numChannels;l_ch++) {
+        m_nextCmdQIdx.at(l_ch)=0;
         for (unsigned l_bankIdx = 0; l_bankIdx < m_numBanks; l_bankIdx++) {
             m_cmdQueues.at(l_ch).resize(m_numBanksPerChannel);
         }
@@ -70,34 +71,34 @@ c_CmdScheduler::c_CmdScheduler(Component *comp, Params &x_params) : SubComponent
         std::cout << "numCmdQEntries value is missing... it will be 32 (default)" << std::endl;
     }
 
-    std::string l_cmdSchedulingPolicy = (std::string) x_params.find<std::string>(
-        "cmdSchedulingPolicy", "BANK", l_found);
+    std::string l_cmdSchedulingPolicy = (std::string) x_params.find<std::string>("cmdSchedulingPolicy", "BANK", l_found);
     if (!l_found) {
-        std::cout << "cmdScheduligPolicy is missing... it will be \"bank round robin\" (default)"
-                  << std::endl;
+        std::cout << "cmdScheduligPolicy is missing... it will be \"bank round robin\" (default)" << std::endl;
     }
-    if (l_cmdSchedulingPolicy == "BANK")
+    if(l_cmdSchedulingPolicy=="BANK")
         m_schedulingPolicy = e_SchedulingPolicy::BANK;  //Bank Round Robin
-    else if (l_cmdSchedulingPolicy == "RANK")
+    else if(l_cmdSchedulingPolicy=="RANK")
         m_schedulingPolicy = e_SchedulingPolicy::RANK;  //Rank Round Robin
-    else {
+    else
+    {
         std::cout << "CmdScheduler: scheduling policy error!\n";
         exit(-1);
     }
 }
 
 
-c_CmdScheduler::~c_CmdScheduler() {
+c_CmdScheduler::~c_CmdScheduler(){
 }
 
 
-void c_CmdScheduler::run() {
+
+void c_CmdScheduler::run(SimTime_t simCycle){
 
     bool isSuccess = false;
-    c_BankCommand *l_cmdPtr = nullptr;
-    SimTime_t l_time = m_owner->getSimCycle();
+    c_BankCommand *l_cmdPtr= nullptr;
+    SimTime_t  l_time=simCycle;
 
-    for (unsigned l_ch = 0; l_ch < m_numChannels; l_ch++) {
+    for(unsigned l_ch=0;l_ch<m_numChannels;l_ch++) {
 
         unsigned nextBankIdx = m_nextCmdQIdx.at(l_ch);
         for (unsigned i = 0; i < m_numBanksPerChannel; i++) {
@@ -112,30 +113,29 @@ void c_CmdScheduler::run() {
                         l_cmdQueue.pop_front();
 
 #ifdef __SST_DEBUG_OUTPUT__
-                        l_cmdPtr->print(output, "[c_CmdScheduler]",m_owner->getSimCycle());
+                        l_cmdPtr->print(output, "[c_CmdScheduler]", simCycle);
 #endif
                     }
                 }
             }
 
-            if (m_schedulingPolicy == e_SchedulingPolicy::BANK)
+            if(m_schedulingPolicy==e_SchedulingPolicy::BANK)
                 nextBankIdx = (nextBankIdx + 1) % m_numBanksPerChannel;
-            else if (m_schedulingPolicy == e_SchedulingPolicy::RANK)
-                nextBankIdx = (nextBankIdx + m_numBanksPerRank) % (m_numBanksPerChannel - 1);
+            else if(m_schedulingPolicy==e_SchedulingPolicy::RANK)
+                nextBankIdx=(nextBankIdx+m_numBanksPerRank)%(m_numBanksPerChannel-1);
 
         }
-        if (m_schedulingPolicy == e_SchedulingPolicy::BANK)
-            m_nextCmdQIdx.at(l_ch) = (m_nextCmdQIdx.at(l_ch) + 1) % m_numBanksPerChannel;
-        else if (m_schedulingPolicy == e_SchedulingPolicy::RANK)
-            m_nextCmdQIdx.at(l_ch) =
-                (m_nextCmdQIdx.at(l_ch) + m_numBanksPerRank) % (m_numBanksPerChannel - 1);
+        if(m_schedulingPolicy==e_SchedulingPolicy::BANK)
+            m_nextCmdQIdx.at(l_ch)=(m_nextCmdQIdx.at(l_ch)+1)%m_numBanksPerChannel;
+        else if(m_schedulingPolicy==e_SchedulingPolicy::RANK)
+            m_nextCmdQIdx.at(l_ch)=(m_nextCmdQIdx.at(l_ch)+m_numBanksPerRank)%(m_numBanksPerChannel-1);
     }
 }
 
 
-bool c_CmdScheduler::push(c_BankCommand *x_cmd) {
-    unsigned l_ch = x_cmd->getHashedAddress()->getChannel();
-    unsigned l_bank = x_cmd->getHashedAddress()->getBankId() % m_numBanksPerChannel;
+bool c_CmdScheduler::push(c_BankCommand* x_cmd) {
+    unsigned l_ch=x_cmd->getHashedAddress()->getChannel();
+    unsigned l_bank=x_cmd->getHashedAddress()->getBankId() % m_numBanksPerChannel;
 
     if (m_cmdQueues[l_ch].at(l_bank).size() < k_numCmdQEntries) {
         m_cmdQueues[l_ch].at(l_bank).push_back(x_cmd);
@@ -146,10 +146,11 @@ bool c_CmdScheduler::push(c_BankCommand *x_cmd) {
 }
 
 
-unsigned c_CmdScheduler::getToken(const c_HashedAddress &x_addr) {
-    unsigned l_ch = x_addr.getChannel();
-    unsigned l_bank = x_addr.getBankId() % m_numBanksPerChannel;
+unsigned c_CmdScheduler::getToken(const c_HashedAddress &x_addr)
+{
+    unsigned l_ch=x_addr.getChannel();
+    unsigned l_bank=x_addr.getBankId() % m_numBanksPerChannel;
 
-    return k_numCmdQEntries - m_cmdQueues[l_ch].at(l_bank).size();
+    return k_numCmdQEntries-m_cmdQueues[l_ch].at(l_bank).size();
 
 }

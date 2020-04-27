@@ -3,7 +3,7 @@ index 589f1d0..ec84d15 100644
 --- libmacsimComponent.cc
 +++ libmacsimComponent.cc
 @@ -1,6 +1,6 @@
- #include <sst_config.h>
+ #include <sst/core/sst_config.h>
  
 -#include "sst/core/serialization.h"
 +//#include "sst/core/serialization.h"
@@ -17,7 +17,7 @@ index f546b6a..c20c2f0 100644
 @@ -3,7 +3,7 @@
  #include <stdint.h>
  
- #include <sst_config.h>
+ #include <sst/core/sst_config.h>
 -#include <sst/core/serialization/element.h>
 +//#include <sst/core/serialization/element.h>
  #include <sst/core/element.h>

@@ -1,8 +1,8 @@
-// Copyright 2009-2019 NTESS. Under the terms
+// Copyright 2009-2020 NTESS. Under the terms
 // of Contract DE-NA0003525 with NTESS, the U.S.
 // Government retains certain rights in this software.
 //
-// Copyright (c) 2009-2019, NTESS
+// Copyright (c) 2009-2020, NTESS
 // All rights reserved.
 //
 // Portions are copyright of other developers:
@@ -19,22 +19,22 @@
 #include "c_BankCommand.hpp"
 
 namespace SST {
-    namespace n_Bank {
-        class c_CmdResEvent : public SST::Event {
-        public:
-            c_BankCommand *m_payload; // FIXME: change this to a unique_ptr
-            c_CmdResEvent() : SST::Event() {}
+namespace CramSim {
+  class c_CmdResEvent : public SST::Event {
+  public:
+    c_BankCommand *m_payload; // FIXME: change this to a unique_ptr
+    c_CmdResEvent() : SST::Event() {}
 
-            void serialize_order(SST::Core::Serialization::serializer &ser) override {
-                Event::serialize_order(ser);
-                ser & m_payload;
-            }
-
-            ImplementSerializable(SST::n_Bank::c_CmdResEvent);
-
-        };
-
+    void serialize_order(SST::Core::Serialization::serializer &ser)  override {
+        Event::serialize_order(ser);
+        ser & m_payload;
     }
+
+    ImplementSerializable(SST::CramSim::c_CmdResEvent);
+
+  };
+
+}
 }
 
 #endif // C_CMDRESEVENT_H

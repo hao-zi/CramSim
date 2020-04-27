@@ -1,8 +1,8 @@
-// Copyright 2009-2019 NTESS. Under the terms
+// Copyright 2009-2020 NTESS. Under the terms
 // of Contract DE-NA0003525 with NTESS, the U.S.
 // Government retains certain rights in this software.
 //
-// Copyright (c) 2009-2019, NTESS
+// Copyright (c) 2009-2020, NTESS
 // All rights reserved.
 //
 // Portions are copyright of other developers:
@@ -13,19 +13,19 @@
 // information, see the LICENSE file in the top level directory of the
 // distribution.
 
-// Copyright 2015 IBM Corporation
+   // Copyright 2015 IBM Corporation
 
-// Licensed under the Apache License, Version 2.0 (the "License");
-// you may not use this file except in compliance with the License.
-// You may obtain a copy of the License at
+   // Licensed under the Apache License, Version 2.0 (the "License");
+   // you may not use this file except in compliance with the License.
+   // You may obtain a copy of the License at
 
-//   http://www.apache.org/licenses/LICENSE-2.0
+   //   http://www.apache.org/licenses/LICENSE-2.0
 
-// Unless required by applicable law or agreed to in writing, software
-// distributed under the License is distributed on an "AS IS" BASIS,
-// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-// See the License for the specific language governing permissions and
-// limitations under the License.
+   // Unless required by applicable law or agreed to in writing, software
+   // distributed under the License is distributed on an "AS IS" BASIS,
+   // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+   // See the License for the specific language governing permissions and
+   // limitations under the License.
 
 
 
@@ -50,101 +50,90 @@
 typedef unsigned long ulong;
 
 namespace SST {
-    namespace n_Bank {
+namespace CramSim {
 
-        class c_BankCommand;
+class c_BankCommand;
 
-        enum class e_TransactionType {
-            READ, WRITE
-        };
+enum class e_TransactionType { READ, WRITE };
 
-        class c_Transaction : public SST::Core::Serialization::serializable {
+class c_Transaction : public SST::Core::Serialization::serializable
+{
 
-        private:
-            uint64_t m_seqNum;
-            e_TransactionType m_txnMnemonic;
-            ulong m_addr;
-            //std::map<e_TransactionType,std::string> m_txnToString;
+private:
+  uint64_t m_seqNum;
+  e_TransactionType m_txnMnemonic;
+  ulong m_addr;
+  //std::map<e_TransactionType,std::string> m_txnToString;
 
-            bool m_isResponseReady;
-            unsigned m_numWaitingCommands;
-            unsigned m_dataWidth;
-            bool m_processed; //<! flag that is set when this transaction is split into commands
+  bool m_isResponseReady;
+  unsigned m_numWaitingCommands;
+  unsigned m_dataWidth;
+  bool m_processed; //<! flag that is set when this transaction is split into commands
 
-            //std::list<c_BankCommand*> m_cmdPtrList; //<! list of c_BankCommand shared_ptrs that compose this c_Transaction
-            std::list <ulong> m_cmdSeqNumList; //<! list of c_BankCommand Sequence numbers that compose this c_Transaction
-            c_HashedAddress m_hashedAddr;
-            bool m_hasHashedAddr;
+  //std::list<c_BankCommand*> m_cmdPtrList; //<! list of c_BankCommand shared_ptrs that compose this c_Transaction
+  std::list<ulong> m_cmdSeqNumList; //<! list of c_BankCommand Sequence numbers that compose this c_Transaction
+    c_HashedAddress m_hashedAddr;
+    bool m_hasHashedAddr;
 
-        public:
+public:
 
 //  friend std::ostream& operator<< (std::ostream& x_stream, const c_Transaction& x_transaction);
 
-            c_Transaction() {} // required for ImplementSerializable
-            c_Transaction(ulong x_seqNum, e_TransactionType x_cmdType, ulong x_addr,
-                          unsigned x_dataWidth);
+  c_Transaction() {} // required for ImplementSerializable
+  c_Transaction( ulong x_seqNum, e_TransactionType x_cmdType , ulong x_addr , unsigned x_dataWidth);
+  ~c_Transaction();
 
-            ~c_Transaction();
+  e_TransactionType getTransactionMnemonic() const;
 
-            e_TransactionType getTransactionMnemonic() const;
+  ulong getAddress() const;         //<! returns the address accessed by this command
+  std::string getTransactionString() const; //<! returns the mnemonic of command
 
-            ulong getAddress() const;         //<! returns the address accessed by this command
-            std::string getTransactionString() const; //<! returns the mnemonic of command
+  void setResponseReady(); //<! sets the flag that this transaction has received its response.
+  bool isResponseReady();  //<! returns the flag that this transaction has received its response.
 
-            void setResponseReady(); //<! sets the flag that this transaction has received its response.
-            bool isResponseReady();  //<! returns the flag that this transaction has received its response.
+  void setWaitingCommands(const unsigned x_numWaitingCommands);
+  unsigned getWaitingCommands() const;
 
-            void setWaitingCommands(const unsigned x_numWaitingCommands);
+  bool matchesCmdSeqNum(ulong x_seqNum); //<! returns true if this transaction matches a command with x_seqNum
 
-            unsigned getWaitingCommands() const;
+  void addCommandPtr(c_BankCommand* x_cmdPtr);
 
-            bool matchesCmdSeqNum(
-                ulong x_seqNum); //<! returns true if this transaction matches a command with x_seqNum
+  ulong getSeqNum() const;
 
-            void addCommandPtr(c_BankCommand *x_cmdPtr);
+  unsigned getDataWidth() const;
+  unsigned getThreadId() const; // FIXME
+  bool isProcessed() const;
+  void isProcessed(bool x_processed);
+  void print() const;
+  void print(SST::Output *x_output, std::string x_prefix, SimTime_t x_cycle) const;
 
-            ulong getSeqNum() const;
+  const c_HashedAddress& getHashedAddress() const {
+         return (m_hashedAddr);
+  }
+  void setHashedAddress(c_HashedAddress &x_hashedAddr) {
+      m_hashedAddr = x_hashedAddr;
+      m_hasHashedAddr=true;
+  }
+        bool hasHashedAddress(){
+            return m_hasHashedAddr;
+        }
 
-            unsigned getDataWidth() const;
+        bool isRead(){
+            return m_txnMnemonic==e_TransactionType ::READ;
+        }
 
-            unsigned getThreadId() const; // FIXME
-            bool isProcessed() const;
-
-            void isProcessed(bool x_processed);
-
-            void print() const;
-
-            void print(SST::Output *x_output, std::string x_prefix, SimTime_t x_cycle) const;
-
-            const c_HashedAddress &getHashedAddress() const {
-                return (m_hashedAddr);
-            }
-
-            void setHashedAddress(c_HashedAddress &x_hashedAddr) {
-                m_hashedAddr = x_hashedAddr;
-                m_hasHashedAddr = true;
-            }
-
-            bool hasHashedAddress() {
-                return m_hasHashedAddr;
-            }
-
-            bool isRead() {
-                return m_txnMnemonic == e_TransactionType::READ;
-            }
-
-            bool isWrite() {
-                return m_txnMnemonic == e_TransactionType::WRITE;
-            }
+        bool isWrite(){
+            return m_txnMnemonic==e_TransactionType ::WRITE;
+        }
 
 
-            void serialize_order(SST::Core::Serialization::serializer &ser) override;
+  void serialize_order(SST::Core::Serialization::serializer &ser) override ;
 
-            ImplementSerializable(c_Transaction);
+  ImplementSerializable(c_Transaction);
 
-        };
+};
 
-    } // namespace n_Bank
+} // namespace CramSim
 } // namespace SST
 
 #endif // C_TRANSACTION_HPP

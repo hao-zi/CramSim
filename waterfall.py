@@ -4,7 +4,7 @@ import sys
 
 numBanks = 32
 
-cmdDict = {"ACT": "A", "READ": "R", "WRITE": "W", "PRE": "P", "REF": "F"}
+cmdDict = {"ACT":"A","READ":"R","WRITE":"W","PRE":"P","REF":"F"}
 
 bankStates = []
 for ii in range(numBanks):
@@ -17,13 +17,13 @@ inFile = open(inFileName)
 sys.stdout.write('%10s' % " ")
 for ii in range(numBanks):
     sys.stdout.write('%3d' % ii)
-print
+print()
 
 bankList = list()
 first = True
 
 for line in inFile:
-    if line[0] != '@':  # very simple format checking
+    if line[0] != '@': # very simple format checking
         continue
     line = line.rstrip()
     grep = line.split()
@@ -39,9 +39,9 @@ for line in inFile:
         sys.stdout.write(" ")
         for ii in range(numBanks):
             sys.stdout.write('%3s' % bankStates[ii])
-        print " ", addr
+        print(" ",addr)
 
-        # reset active banks to | and precharge banks to .
+        #reset active banks to | and precharge banks to .
         if len(bankList) > 1:
             for curBankId in bankList:
                 if bankStates[curBankId] == "A" or bankStates[curBankId] == "W" or bankStates[curBankId] == "R":
@@ -53,15 +53,18 @@ for line in inFile:
                 bankStates[bankId] = "|"
             if bankStates[bankId] == "P" or bankStates[bankId] == "F":
                 bankStates[bankId] = "."
-
-        bankList = list()  ## clear the bank list
-
+            
+        bankList = list() ## clear the bank list
+        
     addr = grep[3]
     bankId = int(grep[-1])
     if bankId >= numBanks:
-        print "Increase numBanks!", bankId, "detected, max is", numBanks - 1
+        print("Increase numBanks!",bankId,"detected, max is",numBanks-1)
         exit(-1)
     bankStates[bankId] = cmdDict[cmd]
     bankList.append(bankId)
-
+        
     lastCycle = cycle
+
+
+    

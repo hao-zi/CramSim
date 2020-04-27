@@ -1,8 +1,8 @@
-// Copyright 2009-2019 NTESS. Under the terms
+// Copyright 2009-2020 NTESS. Under the terms
 // of Contract DE-NA0003525 with NTESS, the U.S.
 // Government retains certain rights in this software.
 //
-// Copyright (c) 2009-2019, NTESS
+// Copyright (c) 2009-2020, NTESS
 // All rights reserved.
 //
 // Portions are copyright of other developers:
@@ -49,31 +49,27 @@
 
 typedef unsigned long ulong;
 namespace SST {
-    namespace n_Bank {
+    namespace CramSim {
         class c_Controller;
 
         class c_AddressHasher : public SubComponent {
 
         public:
 
-            SST_ELI_REGISTER_SUBCOMPONENT(
+            SST_ELI_REGISTER_SUBCOMPONENT_API(SST::CramSim::c_AddressHasher, Output*, unsigned, unsigned, unsigned, unsigned, unsigned, unsigned, unsigned)
+
+            SST_ELI_REGISTER_SUBCOMPONENT_DERIVED(
                 c_AddressHasher,
-            "CramSim",
-            "c_AddressHasher",
-            SST_ELI_ELEMENT_VERSION(1,0,0),
-            "Hashes addresses based on config parameters",
-            "SST::CramSim::Controller::AddressHasher"
+                "CramSim",
+                "c_AddressHasher",
+                SST_ELI_ELEMENT_VERSION(1,0,0),
+                "Hashes addresses based on config parameters",
+                SST::CramSim::c_AddressHasher
             )
 
             SST_ELI_DOCUMENT_PARAMS(
-            { "numChannelsPerDimm", "Total number of channels per DIMM", NULL },
-            { "numRanksPerChannel", "Total number of ranks per channel", NULL },
-            { "numBankGroupsPerRank", "Total number of bank groups per rank", NULL },
-            { "numBanksPerBankGroup", "Total number of banks per group", NULL },
-            { "numRowsPerBank" "Number of rows in every bank", NULL },
-            { "numColsPerBank", "Number of cols in every bank", NULL },
-            { "numBytesPerTransaction", "Number of bytes retrieved for every transaction", NULL },
-            { "strAddressMapStr", "String defining the address mapping scheme", NULL },
+                {"numBytesPerTransaction", "Number of bytes retrieved for every transaction", "1"},
+                {"strAddressMapStr","String defining the address mapping scheme","_r_l_b_R_B_h_"},
             )
 
             SST_ELI_DOCUMENT_PORTS(
@@ -83,13 +79,13 @@ namespace SST {
             )
 
             // Below is for calling in generic locations to obtain a pointer to the singleton instance
-            c_AddressHasher(Component *comp, Params &params);
+            c_AddressHasher(ComponentId_t id, Params &params, Output* out, unsigned channels, unsigned ranks, unsigned bankGroups, unsigned banks, unsigned rows, unsigned cols, unsigned pChannels);
+            void build(Params &params); // Temporary until subcomponent api transition is complete
 
             static c_AddressHasher *getInstance();
 
             static c_AddressHasher *
-            getInstance(
-                Params &x_params); // This reads the parameters and constructs the hash function
+            getInstance(Params &x_params); // This reads the parameters and constructs the hash function
 
             void fillHashedAddress(c_HashedAddress *x_hashAddr, const ulong x_address);
 
@@ -99,13 +95,11 @@ namespace SST {
 
             c_AddressHasher(const c_AddressHasher &) = delete;
 
-            void operator=(const c_AddressHasher &) = delete;
+            void operator=(const c_AddressHasher &)= delete;
 
             c_AddressHasher(Params &x_params);
-
             ulong getAddressForBankId(const unsigned x_bankId);
 
-            c_Controller *m_owner;
             unsigned k_pNumChannels;
             unsigned k_pNumRanks;
             unsigned k_pNumBankGroups;
@@ -116,11 +110,13 @@ namespace SST {
             unsigned k_pNumPseudoChannels;
 
             std::string k_addressMapStr = "rlbRBh";
-            std::map <std::string, std::vector<uint>> m_bitPositions;
-            std::map <std::string, uint> m_structureSizes;  // Used for checking that params agree
+            std::map<std::string, std::vector<uint> > m_bitPositions;
+            std::map<std::string, uint> m_structureSizes;  // Used for checking that params agree
 
             // regex replacement stuff
-            void parsePattern(std::string *x_inStr, std::pair <std::string, uint> *x_outPair);
+            void parsePattern(std::string *x_inStr, std::pair<std::string, uint> *x_outPair);
+
+            Output* output;
         };
     }
 }

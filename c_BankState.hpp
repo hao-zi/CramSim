@@ -1,8 +1,8 @@
-// Copyright 2009-2019 NTESS. Under the terms
+// Copyright 2009-2020 NTESS. Under the terms
 // of Contract DE-NA0003525 with NTESS, the U.S.
 // Government retains certain rights in this software.
 //
-// Copyright (c) 2009-2019, NTESS
+// Copyright (c) 2009-2020, NTESS
 // All rights reserved.
 //
 // Portions are copyright of other developers:
@@ -41,52 +41,49 @@
 //#include "c_BankInfo.hpp"
 
 namespace SST {
-    namespace n_Bank {
+namespace CramSim {
 
-        class c_BankInfo;
-
-        class c_BankCommand;
-
-        enum class e_BankCommandType;
+class c_BankInfo;
+class c_BankCommand;
+enum class e_BankCommandType;
 
 // Bankstates
-        enum class e_BankState {
-            NONE, IDLE, ACTNG, ACTIVE, READ, READA, WRITE, WRITEA, PRE, REF
-        };
+enum class e_BankState {
+	NONE, IDLE, ACTNG, ACTIVE, READ, READA, WRITE, WRITEA, PRE, REF
+};
 // NONE state is for the startup situation when IDLE state is entered.
 
 
 
-        class c_BankState {
-        public:
-            virtual ~c_BankState() {
-            }
+class c_BankState {
+public:
+	virtual ~c_BankState() {
+	}
 
-            virtual void handleCommand(c_BankInfo *x_bank, c_BankCommand *x_bankCommandPtr,
-                                       SimTime_t x_cycle) = 0;
+	virtual void handleCommand(c_BankInfo* x_bank, c_BankCommand* x_bankCommandPtr, SimTime_t x_cycle) = 0;
 
-            virtual void clockTic(c_BankInfo *x_bank, SimTime_t x_cycle) = 0;
+	virtual void clockTic(c_BankInfo* x_bank, SimTime_t x_cycle) = 0;
 
-            virtual void enter(c_BankInfo *x_bank, c_BankState *x_prevState,
-                               c_BankCommand *x_cmdPtr, SimTime_t x_cycle) = 0;
+	virtual void enter(c_BankInfo* x_bank, c_BankState* x_prevState,
+			c_BankCommand* x_cmdPtr, SimTime_t x_cycle) = 0;
 
-            virtual std::list <e_BankCommandType> getAllowedCommands() = 0;
+	virtual std::list<e_BankCommandType> getAllowedCommands() = 0;
 
-            virtual bool isCommandAllowed(c_BankCommand *x_cmdPtr,
-                                          c_BankInfo *x_bankPtr) = 0;
+	virtual bool isCommandAllowed(c_BankCommand* x_cmdPtr,
+			c_BankInfo* x_bankPtr) = 0;
 
-            e_BankState getCurrentState() {
-                return m_currentState;
-            }
+	e_BankState getCurrentState() {
+		return m_currentState;
+	}
 
 //private:
-        protected:
-            std::map<std::string, unsigned> *m_bankParams;
+protected:
+	std::map<std::string, unsigned>* m_bankParams;
 
-            e_BankState m_currentState;
+	e_BankState m_currentState;
 
-        };
-    }
+};
+}
 }
 
 #endif // C_BANKSTATE_HPP

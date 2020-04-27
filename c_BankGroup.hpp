@@ -1,8 +1,8 @@
-// Copyright 2009-2019 NTESS. Under the terms
+// Copyright 2009-2020 NTESS. Under the terms
 // of Contract DE-NA0003525 with NTESS, the U.S.
 // Government retains certain rights in this software.
 //
-// Copyright (c) 2009-2019, NTESS
+// Copyright (c) 2009-2020, NTESS
 // All rights reserved.
 //
 // Portions are copyright of other developers:
@@ -40,46 +40,39 @@
 #include <sst/core/link.h>
 
 namespace SST {
-    namespace n_Bank {
+namespace CramSim {
 
-        class c_BankInfo;
+class c_BankInfo;
+class c_Rank;
+class c_BankCommand;
 
-        class c_Rank;
-
-        class c_BankCommand;
-
-        class c_BankGroup {
-        public:
+class c_BankGroup {
+public:
 
 
-            c_BankGroup(std::map<std::string, unsigned> *x_bankParams, unsigned x_Id);
+        c_BankGroup(std::map<std::string, unsigned>* x_bankParams, unsigned x_Id);
+	virtual ~c_BankGroup();
 
-            virtual ~c_BankGroup();
+	void acceptBank(c_BankInfo* x_bankPtr);
+	void acceptRank(c_Rank* x_rankPtr);
 
-            void acceptBank(c_BankInfo *x_bankPtr);
+	unsigned getNumBanks() const;
+        unsigned getBankGroupId() const;
+	std::vector<c_BankInfo*> getBankPtrs() const;
+	c_Rank* getRankPtr() const;
 
-            void acceptRank(c_Rank *x_rankPtr);
+	void updateOtherBanksNextCommandCycles(c_BankInfo* x_initBankPtr,
+			c_BankCommand* x_cmdPtr, SimTime_t x_cycle);
 
-            unsigned getNumBanks() const;
+private:
+        unsigned m_bankGroupId;
+	std::vector<c_BankInfo*> m_bankPtrs;
+	c_Rank* m_rankPtr;
 
-            unsigned getBankGroupId() const;
+	std::map<std::string, unsigned>* m_bankParams;
 
-            std::vector<c_BankInfo *> getBankPtrs() const;
+};
 
-            c_Rank *getRankPtr() const;
-
-            void updateOtherBanksNextCommandCycles(c_BankInfo *x_initBankPtr,
-                                                   c_BankCommand *x_cmdPtr, SimTime_t x_cycle);
-
-        private:
-            unsigned m_bankGroupId;
-            std::vector<c_BankInfo *> m_bankPtrs;
-            c_Rank *m_rankPtr;
-
-            std::map<std::string, unsigned> *m_bankParams;
-
-        };
-
-    } // end n_Bank
+} // end CramSim
 } // end SST
 #endif /* C_BANKGROUP_HPP_ */

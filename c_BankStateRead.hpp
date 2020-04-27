@@ -1,8 +1,8 @@
-// Copyright 2009-2019 NTESS. Under the terms
+// Copyright 2009-2020 NTESS. Under the terms
 // of Contract DE-NA0003525 with NTESS, the U.S.
 // Government retains certain rights in this software.
 //
-// Copyright (c) 2009-2019, NTESS
+// Copyright (c) 2009-2020, NTESS
 // All rights reserved.
 //
 // Portions are copyright of other developers:
@@ -36,44 +36,41 @@
 #include "c_BankCommand.hpp"
 
 namespace SST {
-    namespace n_Bank {
+namespace CramSim {
 
-        class c_BankStateActive;
+class c_BankStateActive;
 
-        class c_BankStateRead : public c_BankState {
+class c_BankStateRead: public c_BankState {
 
-        public:
+public:
 
-            c_BankStateRead(std::map<std::string, unsigned> *x_bankParams);
+	c_BankStateRead(std::map<std::string, unsigned>* x_bankParams);
+	~c_BankStateRead();
 
-            ~c_BankStateRead();
+	virtual void handleCommand(c_BankInfo* x_bank, c_BankCommand* x_bankCommandPtr, SimTime_t x_cycle);
 
-            virtual void handleCommand(c_BankInfo *x_bank, c_BankCommand *x_bankCommandPtr,
-                                       SimTime_t x_cycle);
+	virtual void clockTic(c_BankInfo* x_bank, SimTime_t x_cycle);
 
-            virtual void clockTic(c_BankInfo *x_bank, SimTime_t x_cycle);
+	virtual void enter(c_BankInfo* x_bank,
+			c_BankState* x_prevState, c_BankCommand* x_cmdPtr, SimTime_t x_cycle);
 
-            virtual void enter(c_BankInfo *x_bank,
-                               c_BankState *x_prevState, c_BankCommand *x_cmdPtr,
-                               SimTime_t x_cycle);
+	virtual std::list<e_BankCommandType> getAllowedCommands();
 
-            virtual std::list <e_BankCommandType> getAllowedCommands();
+	virtual bool isCommandAllowed(c_BankCommand* x_cmdPtr,
+			c_BankInfo* x_bankPtr);
 
-            virtual bool isCommandAllowed(c_BankCommand *x_cmdPtr,
-                                          c_BankInfo *x_bankPtr);
+private:
+	SimTime_t m_timer; // counts down to 0. when 0, changes state to ACTIVE automatically. is reset to ?? at state entry.
+	SimTime_t m_timerExit; // counts down to 0 during state exit
 
-        private:
-            SimTime_t m_timer; // counts down to 0. when 0, changes state to ACTIVE automatically. is reset to ?? at state entry.
-            SimTime_t m_timerExit; // counts down to 0 during state exit
+private:
+	std::list<e_BankCommandType> m_allowedCommands;
+	c_BankCommand* m_receivedCommandPtr;
+	c_BankCommand* m_prevCommandPtr;
+	c_BankState* m_nextStatePtr;
 
-        private:
-            std::list <e_BankCommandType> m_allowedCommands;
-            c_BankCommand *m_receivedCommandPtr;
-            c_BankCommand *m_prevCommandPtr;
-            c_BankState *m_nextStatePtr;
+};
 
-        };
-
-    }
+}
 }
 #endif // C_BANKSTATEREAD_HPP

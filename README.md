@@ -78,7 +78,7 @@ traces cannot be checked in into the sst-elements directory.  The VeriMem traces
 [here](https://github.com/sstsimulator/sst-downloads/releases). The filenames begin with sst-CramSim-trace_verimem in
 the SST Test Support Files section.
 
-To run Verimem (from within `/sstcramsim/sst/elements/CramSim/`):
+To run Verimem (from within `/sstcramsim/`):
 
 ```shell
 python ./tests/VeriMem/test_verimem1.py BOOL_DEBUG_OUTPUT
@@ -177,7 +177,7 @@ export SST_CORE_ROOT="<SST-Core source code directory>"
 
   - Run
   ```shell
-  cd $SST_ELEMENT_ROOT/src/sst/elements/CramSim/tests
+  cd $SST_ELEMENT_ROOT/src/tests
   make
   sst ariel_cramsim.py
   ```
@@ -185,7 +185,7 @@ export SST_CORE_ROOT="<SST-Core source code directory>"
 - Run with MacSim
   - Install
   ```shell
-  cd $SST_ELEMENT_ROOT/src/sst/elements/CramSim/tests
+  cd $SST_ELEMENT_ROOT/src/tests
   ./get_macsim.sh
   cd $SST_ELEMENT_ROOT
   ./autogen.sh
@@ -196,6 +196,6 @@ export SST_CORE_ROOT="<SST-Core source code directory>"
 
    - Run
   ```shell
-  cd $SST_ELEMENT_ROOT/src/sst/elements/CramSim/tests
+  cd $SST_ELEMENT_ROOT/src/tests
   sst macsim_cramsim.py
   ```
