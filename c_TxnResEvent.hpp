@@ -39,26 +39,23 @@
 namespace SST {
 namespace CramSim {
 
-  class c_Transaction;
+class c_Transaction;
 
-class c_TxnResEvent: public SST::Event {
+class c_TxnResEvent : public SST::Event {
 public:
-	c_Transaction *m_payload; // FIXME: change this pointer to a unique_ptr
+  c_Transaction *m_payload; // FIXME: change this pointer to a unique_ptr
 
-	c_TxnResEvent() :
-			SST::Event() {
-	}
+  c_TxnResEvent() : SST::Event() {}
 
-	void serialize_order(SST::Core::Serialization::serializer &ser)  override {
-		Event::serialize_order(ser);
-		ser & m_payload;
-	}
+  void serialize_order(SST::Core::Serialization::serializer &ser) override {
+    Event::serialize_order(ser);
+    ser &m_payload;
+  }
 
-	ImplementSerializable (SST::CramSim::c_TxnResEvent);
-
+  ImplementSerializable(SST::CramSim::c_TxnResEvent);
 };
 
-}
-}
+} // namespace CramSim
+} // namespace SST
 
 #endif /* C_TXNRESEVENT_HPP_ */

@@ -29,11 +29,11 @@
 #ifndef C_BANKSTATEACTIVE_HPP
 #define C_BANKSTATEACTIVE_HPP
 
-#include <memory>
 #include <list>
+#include <memory>
 
-#include "c_BankState.hpp"
 #include "c_BankCommand.hpp"
+#include "c_BankState.hpp"
 
 namespace SST {
 namespace CramSim {
@@ -43,32 +43,32 @@ class c_BankStateReadA;
 class c_BankStateWrite;
 class c_BankStateWriteA;
 
-class c_BankStateActive: public c_BankState {
+class c_BankStateActive : public c_BankState {
 
 public:
+  c_BankStateActive(std::map<std::string, unsigned> *x_bankParams);
+  ~c_BankStateActive();
 
-	c_BankStateActive(std::map<std::string, unsigned>* x_bankParams);
-	~c_BankStateActive();
+  virtual void handleCommand(c_BankInfo *x_bank,
+                             c_BankCommand *x_bankCommandPtr,
+                             SimTime_t x_simCycle);
 
-	virtual void handleCommand(c_BankInfo* x_bank, c_BankCommand* x_bankCommandPtr, SimTime_t x_simCycle);
+  virtual void clockTic(c_BankInfo *x_bank, SimTime_t x_simCycle);
 
-	virtual void clockTic(c_BankInfo* x_bank, SimTime_t x_simCycle);
+  virtual void enter(c_BankInfo *x_bank, c_BankState *x_prevState,
+                     c_BankCommand *x_cmdPtr, SimTime_t x_simCycle);
 
-	virtual void enter(c_BankInfo* x_bank, c_BankState* x_prevState, c_BankCommand* x_cmdPtr, SimTime_t x_simCycle);
+  virtual std::list<e_BankCommandType> getAllowedCommands();
 
-	virtual std::list<e_BankCommandType> getAllowedCommands();
-
-	virtual bool isCommandAllowed(c_BankCommand* x_cmdPtr,
-			c_BankInfo* x_bankPtr);
+  virtual bool isCommandAllowed(c_BankCommand *x_cmdPtr, c_BankInfo *x_bankPtr);
 
 private:
-
-	std::list<e_BankCommandType> m_allowedCommands;
-	c_BankCommand* m_receivedCommandPtr; //<! pointer to command received after entering this state
-	c_BankCommand* m_prevCommandPtr;
-	c_BankState* m_nextStatePtr;
-	SimTime_t m_timer;
-
+  std::list<e_BankCommandType> m_allowedCommands;
+  c_BankCommand *m_receivedCommandPtr; //<! pointer to command received after
+                                       //entering this state
+  c_BankCommand *m_prevCommandPtr;
+  c_BankState *m_nextStatePtr;
+  SimTime_t m_timer;
 };
 } // namespace CramSim
 } // namespace SST

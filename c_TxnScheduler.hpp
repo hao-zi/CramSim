@@ -27,92 +27,86 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-
 #ifndef C_TXNSCHEDULER_HPP
 #define C_TXNSCHEDULER_HPP
 
+#include "c_Controller.hpp"
 #include "c_Transaction.hpp"
 #include "c_TxnConverter.hpp"
-#include "c_Controller.hpp"
-
 
 namespace SST {
-    namespace CramSim {
-        class c_AddressHasher;
-        class c_TxnConverter;
-        class c_Controller;
+namespace CramSim {
+class c_AddressHasher;
+class c_TxnConverter;
+class c_Controller;
 
-        enum class e_txnSchedulingPolicy {FCFS, FRFCFS};
-        typedef std::list<c_Transaction*> TxnQueue;
+enum class e_txnSchedulingPolicy { FCFS, FRFCFS };
+typedef std::list<c_Transaction *> TxnQueue;
 
-        class c_TxnScheduler: public SubComponent{
-        public:
+class c_TxnScheduler : public SubComponent {
+public:
+  SST_ELI_REGISTER_SUBCOMPONENT_API(SST::CramSim::c_TxnScheduler, Output *,
+                                    unsigned, c_TxnConverter *,
+                                    c_CmdScheduler *)
 
-            SST_ELI_REGISTER_SUBCOMPONENT_API(SST::CramSim::c_TxnScheduler, Output*, unsigned, c_TxnConverter*, c_CmdScheduler*)
+  SST_ELI_REGISTER_SUBCOMPONENT_DERIVED(c_TxnScheduler, "CramSim",
+                                        "c_TxnScheduler",
+                                        SST_ELI_ELEMENT_VERSION(1, 0, 0),
+                                        "Transaction Scheduler",
+                                        SST::CramSim::c_TxnScheduler)
 
-            SST_ELI_REGISTER_SUBCOMPONENT_DERIVED(
-                c_TxnScheduler,
-                "CramSim",
-                "c_TxnScheduler",
-                SST_ELI_ELEMENT_VERSION(1,0,0),
-                "Transaction Scheduler",
-                SST::CramSim::c_TxnScheduler
-            )
+  SST_ELI_DOCUMENT_PARAMS({"txnSchedulingPolicy",
+                           "Transaction scheduling policy", "FCFS"},
+                          {"numTxnQEntries",
+                           "The number of transaction queue entries", "32"},
+                          {"boolReadFirstTxnScheduling", "", "0"},
+                          {"maxPendingWriteThreshold", "", "1.0"},
+                          {"minPendingWriteThreshold", "", "0.2"}, )
 
-            SST_ELI_DOCUMENT_PARAMS(
-                {"txnSchedulingPolicy", "Transaction scheduling policy", "FCFS"},
-                {"numTxnQEntries", "The number of transaction queue entries", "32"},
-                {"boolReadFirstTxnScheduling", "", "0"},
-                {"maxPendingWriteThreshold", "", "1.0"},
-                {"minPendingWriteThreshold", "", "0.2"},
-            )
+  SST_ELI_DOCUMENT_PORTS()
 
-            SST_ELI_DOCUMENT_PORTS(
-            )
+  SST_ELI_DOCUMENT_STATISTICS()
 
-            SST_ELI_DOCUMENT_STATISTICS(
-            )
+  c_TxnScheduler(SST::ComponentId_t id, SST::Params &x_params, Output *out,
+                 unsigned channels, c_TxnConverter *converter,
+                 c_CmdScheduler *scheduler);
+  void build(Params &x_params); // Temporary
+  ~c_TxnScheduler();
 
-            c_TxnScheduler(SST::ComponentId_t id, SST::Params &x_params, Output* out, unsigned channels, c_TxnConverter* converter, c_CmdScheduler* scheduler);
-            void build(Params &x_params); // Temporary
-            ~c_TxnScheduler();
+  virtual void run(SimTime_t simCycle);
+  virtual bool push(c_Transaction *newTxn);
+  virtual bool isHit(c_Transaction *newTxn);
 
-            virtual void run(SimTime_t simCycle);
-            virtual bool push(c_Transaction* newTxn);
-            virtual bool isHit(c_Transaction* newTxn);
+private:
+  virtual c_Transaction *getNextTxn(TxnQueue &x_queue, int x_ch);
+  virtual bool hasDependancy(c_Transaction *x_txn, int x_ch);
+  virtual void popTxn(TxnQueue &x_queue, c_Transaction *x_txn);
 
+  //**transaction converter
+  c_TxnConverter *m_txnConverter;
+  //**command Scheduler
+  c_CmdScheduler *m_cmdScheduler;
 
-        private:
-            virtual c_Transaction* getNextTxn(TxnQueue& x_queue, int x_ch);
-            virtual bool hasDependancy(c_Transaction* x_txn, int x_ch);
-            virtual void popTxn(TxnQueue& x_queue, c_Transaction* x_txn);
+  //**per-channel transaction queue
+  std::vector<TxnQueue> m_txnQ; // unified queue
+  //**per-channel tranaction queues for read-first scheduling
+  std::vector<TxnQueue> m_txnReadQ;  // read queue for read-first scheduling
+  std::vector<TxnQueue> m_txnWriteQ; // write queue for read-first scheduling
+  unsigned m_maxNumPendingWrite;
+  unsigned m_minNumPendingWrite;
 
-            //**transaction converter
-            c_TxnConverter* m_txnConverter;
-            //**command Scheduler
-            c_CmdScheduler* m_cmdScheduler;
+  Output *output;
+  unsigned m_numChannels;
+  bool m_flushWriteQueue;
 
-            //**per-channel transaction queue
-            std::vector<TxnQueue> m_txnQ;      // unified queue
-            //**per-channel tranaction queues for read-first scheduling
-            std::vector<TxnQueue> m_txnReadQ;  // read queue for read-first scheduling
-            std::vector<TxnQueue> m_txnWriteQ; // write queue for read-first scheduling
-            unsigned m_maxNumPendingWrite;
-            unsigned m_minNumPendingWrite;
+  // parameters
+  e_txnSchedulingPolicy k_txnSchedulingPolicy;
+  unsigned k_numTxnQEntries;
+  float k_maxPendingWriteThreshold;
+  float k_minPendingWriteThreshold;
+  bool k_isReadFirstScheduling;
+};
+} // namespace CramSim
+} // namespace SST
 
-            Output *output;
-            unsigned m_numChannels;
-            bool m_flushWriteQueue;
-
-            //parameters
-            e_txnSchedulingPolicy k_txnSchedulingPolicy;
-            unsigned k_numTxnQEntries;
-            float k_maxPendingWriteThreshold;
-            float k_minPendingWriteThreshold;
-            bool k_isReadFirstScheduling;
-
-        };
-    }
-}
-
-#endif //C_TRANSACTIONSCHEDULER_HPP
+#endif // C_TRANSACTIONSCHEDULER_HPP

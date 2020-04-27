@@ -27,7 +27,6 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-
 #ifndef C_CMDREQEVENT_H
 #define C_CMDREQEVENT_H
 
@@ -35,22 +34,21 @@
 
 namespace SST {
 namespace CramSim {
-  class c_CmdReqEvent : public SST::Event {
-  public:
-    c_BankCommand *m_payload; // FIXME: change this pointer to a unique_ptr
+class c_CmdReqEvent : public SST::Event {
+public:
+  c_BankCommand *m_payload; // FIXME: change this pointer to a unique_ptr
 
-    c_CmdReqEvent() : SST::Event() {}
+  c_CmdReqEvent() : SST::Event() {}
 
-    void serialize_order(SST::Core::Serialization::serializer &ser)  override {
-        Event::serialize_order(ser);
-        ser & m_payload;
-    }
+  void serialize_order(SST::Core::Serialization::serializer &ser) override {
+    Event::serialize_order(ser);
+    ser &m_payload;
+  }
 
-    ImplementSerializable(SST::CramSim::c_CmdReqEvent);
+  ImplementSerializable(SST::CramSim::c_CmdReqEvent);
+};
 
-  };
-
-}
-}
+} // namespace CramSim
+} // namespace SST
 
 #endif // C_CMDREQEVENT_H

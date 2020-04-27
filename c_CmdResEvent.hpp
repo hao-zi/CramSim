@@ -20,21 +20,20 @@
 
 namespace SST {
 namespace CramSim {
-  class c_CmdResEvent : public SST::Event {
-  public:
-    c_BankCommand *m_payload; // FIXME: change this to a unique_ptr
-    c_CmdResEvent() : SST::Event() {}
+class c_CmdResEvent : public SST::Event {
+public:
+  c_BankCommand *m_payload; // FIXME: change this to a unique_ptr
+  c_CmdResEvent() : SST::Event() {}
 
-    void serialize_order(SST::Core::Serialization::serializer &ser)  override {
-        Event::serialize_order(ser);
-        ser & m_payload;
-    }
+  void serialize_order(SST::Core::Serialization::serializer &ser) override {
+    Event::serialize_order(ser);
+    ser &m_payload;
+  }
 
-    ImplementSerializable(SST::CramSim::c_CmdResEvent);
+  ImplementSerializable(SST::CramSim::c_CmdResEvent);
+};
 
-  };
-
-}
-}
+} // namespace CramSim
+} // namespace SST
 
 #endif // C_CMDRESEVENT_H

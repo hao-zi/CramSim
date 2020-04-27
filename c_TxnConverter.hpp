@@ -1,3 +1,4 @@
+// clang-format off
 // Copyright 2009-2020 NTESS. Under the terms
 // of Contract DE-NA0003525 with NTESS, the U.S.
 // Government retains certain rights in this software.
@@ -136,3 +137,4 @@ private:
 
 #endif /* C_TxnConverter_HPP_ */
 
+// clang-format on

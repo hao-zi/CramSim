@@ -30,10 +30,6 @@
 #ifndef SRC_TXNDISPATCHER_HPP
 #define SRC_TXNDISPATCHER_HPP
 
+class TxnDispatcher {};
 
-class TxnDispatcher {
-
-};
-
-
-#endif //SRC_TXNDISPATCHER_HPP
+#endif // SRC_TXNDISPATCHER_HPP

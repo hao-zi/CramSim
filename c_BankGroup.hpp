@@ -32,8 +32,8 @@
 
 // global includes
 #include <memory>
-#include <vector>
 #include <string>
+#include <vector>
 
 // SST includes
 #include <sst/core/component.h>
@@ -48,31 +48,29 @@ class c_BankCommand;
 
 class c_BankGroup {
 public:
+  c_BankGroup(std::map<std::string, unsigned> *x_bankParams, unsigned x_Id);
+  virtual ~c_BankGroup();
 
+  void acceptBank(c_BankInfo *x_bankPtr);
+  void acceptRank(c_Rank *x_rankPtr);
 
-        c_BankGroup(std::map<std::string, unsigned>* x_bankParams, unsigned x_Id);
-	virtual ~c_BankGroup();
+  unsigned getNumBanks() const;
+  unsigned getBankGroupId() const;
+  std::vector<c_BankInfo *> getBankPtrs() const;
+  c_Rank *getRankPtr() const;
 
-	void acceptBank(c_BankInfo* x_bankPtr);
-	void acceptRank(c_Rank* x_rankPtr);
-
-	unsigned getNumBanks() const;
-        unsigned getBankGroupId() const;
-	std::vector<c_BankInfo*> getBankPtrs() const;
-	c_Rank* getRankPtr() const;
-
-	void updateOtherBanksNextCommandCycles(c_BankInfo* x_initBankPtr,
-			c_BankCommand* x_cmdPtr, SimTime_t x_cycle);
+  void updateOtherBanksNextCommandCycles(c_BankInfo *x_initBankPtr,
+                                         c_BankCommand *x_cmdPtr,
+                                         SimTime_t x_cycle);
 
 private:
-        unsigned m_bankGroupId;
-	std::vector<c_BankInfo*> m_bankPtrs;
-	c_Rank* m_rankPtr;
+  unsigned m_bankGroupId;
+  std::vector<c_BankInfo *> m_bankPtrs;
+  c_Rank *m_rankPtr;
 
-	std::map<std::string, unsigned>* m_bankParams;
-
+  std::map<std::string, unsigned> *m_bankParams;
 };
 
-} // end CramSim
-} // end SST
+} // namespace CramSim
+} // namespace SST
 #endif /* C_BANKGROUP_HPP_ */

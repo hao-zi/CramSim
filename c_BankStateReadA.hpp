@@ -29,47 +29,47 @@
 #ifndef C_BANKSTATEREADA_HPP
 #define C_BANKSTATEREADA_HPP
 
-#include <memory>
 #include <list>
+#include <memory>
 
-#include "c_BankState.hpp"
-#include "c_BankInfo.hpp"
 #include "c_BankCommand.hpp"
+#include "c_BankInfo.hpp"
+#include "c_BankState.hpp"
 #include "c_BankStatePrecharge.hpp"
 
 namespace SST {
 namespace CramSim {
 
-//class c_BankStatePrecharge;
+// class c_BankStatePrecharge;
 
-class c_BankStateReadA: public c_BankState {
+class c_BankStateReadA : public c_BankState {
 
 public:
+  c_BankStateReadA(std::map<std::string, unsigned> *x_bankParams);
+  ~c_BankStateReadA();
 
-	c_BankStateReadA(std::map<std::string, unsigned>* x_bankParams);
-	~c_BankStateReadA();
+  virtual void handleCommand(c_BankInfo *x_bank,
+                             c_BankCommand *x_bankCommandPtr,
+                             SimTime_t x_cycle);
 
-	virtual void handleCommand(c_BankInfo* x_bank, c_BankCommand* x_bankCommandPtr, SimTime_t x_cycle);
+  virtual void clockTic(c_BankInfo *x_bank, SimTime_t x_cycle);
 
-	virtual void clockTic(c_BankInfo* x_bank, SimTime_t x_cycle);
+  virtual void enter(c_BankInfo *x_bank, c_BankState *x_prevState,
+                     c_BankCommand *x_cmdPtr, SimTime_t x_cycle);
 
-	virtual void enter(c_BankInfo* x_bank, c_BankState* x_prevState,
-			c_BankCommand* x_cmdPtr, SimTime_t x_cycle);
+  virtual std::list<e_BankCommandType> getAllowedCommands();
 
-	virtual std::list<e_BankCommandType> getAllowedCommands();
-
-	virtual bool isCommandAllowed(c_BankCommand* x_cmdPtr,
-			c_BankInfo* x_bankPtr);
-
+  virtual bool isCommandAllowed(c_BankCommand *x_cmdPtr, c_BankInfo *x_bankPtr);
 
 private:
-	SimTime_t m_timerEnter; //<! counts down to 0. when 0, changes state to ACTIVE automatically. is reset to ?? at state entry.
-	SimTime_t m_timerExit; //<! counts down to 0 and models the exit to PRE time
-	std::list<e_BankCommandType> m_allowedCommands;
-	c_BankCommand* m_prevCommandPtr;
-	c_BankState* m_nextStatePtr;
+  SimTime_t m_timerEnter; //<! counts down to 0. when 0, changes state to ACTIVE
+                          //automatically. is reset to ?? at state entry.
+  SimTime_t m_timerExit;  //<! counts down to 0 and models the exit to PRE time
+  std::list<e_BankCommandType> m_allowedCommands;
+  c_BankCommand *m_prevCommandPtr;
+  c_BankState *m_nextStatePtr;
 };
 
-}
-}
+} // namespace CramSim
+} // namespace SST
 #endif // C_BANKSTATEREADA_HPP

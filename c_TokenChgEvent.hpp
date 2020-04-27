@@ -36,23 +36,20 @@
 namespace SST {
 namespace CramSim {
 // This event passes between components the change in tokens for a resource
-class c_TokenChgEvent: public SST::Event {
+class c_TokenChgEvent : public SST::Event {
 public:
-	int m_payload; // m_payload is the change in tokens at a certain resource
-	c_TokenChgEvent() :
-			SST::Event() {
-	}
+  int m_payload; // m_payload is the change in tokens at a certain resource
+  c_TokenChgEvent() : SST::Event() {}
 
-	void serialize_order(SST::Core::Serialization::serializer &ser)  override {
-		Event::serialize_order(ser);
-		ser & m_payload;
-	}
+  void serialize_order(SST::Core::Serialization::serializer &ser) override {
+    Event::serialize_order(ser);
+    ser &m_payload;
+  }
 
-	ImplementSerializable (SST::CramSim::c_TokenChgEvent);
-
+  ImplementSerializable(SST::CramSim::c_TokenChgEvent);
 };
 
-}
-}
+} // namespace CramSim
+} // namespace SST
 
 #endif /* C_TOKENCHGEVENT_HPP_ */

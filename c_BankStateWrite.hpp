@@ -29,49 +29,49 @@
 #ifndef C_BANKSTATEWRITE_HPP
 #define C_BANKSTATEWRITE_HPP
 
-#include <memory>
 #include <list>
+#include <memory>
 
-#include "c_BankState.hpp"
 #include "c_BankCommand.hpp"
+#include "c_BankState.hpp"
 
 namespace SST {
 namespace CramSim {
 
 class c_BankStateActive;
 class c_BankStateWriteA;
-//class c_BankStatePrecharge;
+// class c_BankStatePrecharge;
 class c_BankStateRead;
 
-class c_BankStateWrite: public c_BankState {
+class c_BankStateWrite : public c_BankState {
 
 public:
+  c_BankStateWrite(std::map<std::string, unsigned> *x_bankParams);
+  ~c_BankStateWrite();
 
-	c_BankStateWrite(std::map<std::string, unsigned>* x_bankParams);
-	~c_BankStateWrite();
+  virtual void handleCommand(c_BankInfo *x_bank,
+                             c_BankCommand *x_bankCommandPtr,
+                             SimTime_t x_cycle);
 
-	virtual void handleCommand(c_BankInfo* x_bank, c_BankCommand* x_bankCommandPtr, SimTime_t x_cycle);
+  virtual void clockTic(c_BankInfo *x_bank, SimTime_t x_cycle);
 
-	virtual void clockTic(c_BankInfo* x_bank, SimTime_t x_cycle);
+  virtual void enter(c_BankInfo *x_bank, c_BankState *x_prevState,
+                     c_BankCommand *x_cmdPtr, SimTime_t x_cycle);
 
-	virtual void enter(c_BankInfo* x_bank,
-			c_BankState* x_prevState, c_BankCommand* x_cmdPtr,SimTime_t x_cycle);
+  virtual std::list<e_BankCommandType> getAllowedCommands();
 
-	virtual std::list<e_BankCommandType> getAllowedCommands();
-
-	virtual bool isCommandAllowed(c_BankCommand* x_cmdPtr,
-			c_BankInfo* x_bankPtr);
+  virtual bool isCommandAllowed(c_BankCommand *x_cmdPtr, c_BankInfo *x_bankPtr);
 
 private:
-	SimTime_t m_timer; // counts down to 0
-	SimTime_t m_timerExit; // counts down to 0 during state exit
+  SimTime_t m_timer;     // counts down to 0
+  SimTime_t m_timerExit; // counts down to 0 during state exit
 
-	std::list<e_BankCommandType> m_allowedCommands;
-	c_BankCommand* m_receivedCommandPtr;
-	c_BankCommand* m_prevCommandPtr;
-	c_BankState* m_nextStatePtr;
+  std::list<e_BankCommandType> m_allowedCommands;
+  c_BankCommand *m_receivedCommandPtr;
+  c_BankCommand *m_prevCommandPtr;
+  c_BankState *m_nextStatePtr;
 };
 
-}
-}
+} // namespace CramSim
+} // namespace SST
 #endif // C_BANKSTATEWRITE_HPP

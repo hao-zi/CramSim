@@ -44,33 +44,30 @@ namespace CramSim {
 // forward declaration
 class c_BankCommand;
 
-class c_BankStateRefresh: public c_BankState {
+class c_BankStateRefresh : public c_BankState {
 
 public:
+  c_BankStateRefresh(std::map<std::string, unsigned> *x_bankParams);
+  ~c_BankStateRefresh();
 
-	c_BankStateRefresh(std::map<std::string, unsigned>* x_bankParams);
-	~c_BankStateRefresh();
+  virtual void handleCommand(c_BankInfo *x_bank,
+                             c_BankCommand *x_bankCommandPtr,
+                             SimTime_t x_cycle);
 
-	virtual void handleCommand(c_BankInfo* x_bank, c_BankCommand* x_bankCommandPtr, SimTime_t x_cycle);
+  virtual void clockTic(c_BankInfo *x_bank, SimTime_t x_cycle);
+  virtual void enter(c_BankInfo *x_bank, c_BankState *x_prevState,
+                     c_BankCommand *x_cmdPtr, SimTime_t x_cycle);
+  virtual std::list<e_BankCommandType> getAllowedCommands();
 
-	virtual void clockTic(c_BankInfo* x_bank, SimTime_t x_cycle);
-	virtual void enter(c_BankInfo* x_bank, c_BankState* x_prevState, c_BankCommand* x_cmdPtr, SimTime_t x_cycle);
-	virtual std::list<e_BankCommandType> getAllowedCommands();
-
-	virtual bool isCommandAllowed(c_BankCommand* x_cmdPtr,
-			c_BankInfo* x_bankPtr);
+  virtual bool isCommandAllowed(c_BankCommand *x_cmdPtr, c_BankInfo *x_bankPtr);
 
 private:
-
-
-	std::list<e_BankCommandType> m_allowedCommands;
-	c_BankCommand* m_receivedCommandPtr;
-	c_BankCommand* m_prevCommandPtr;
-	SimTime_t m_timer;
-
-
+  std::list<e_BankCommandType> m_allowedCommands;
+  c_BankCommand *m_receivedCommandPtr;
+  c_BankCommand *m_prevCommandPtr;
+  SimTime_t m_timer;
 };
-}
-}
+} // namespace CramSim
+} // namespace SST
 
 #endif // C_BANKSTATEREFRESH_HPP

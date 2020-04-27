@@ -32,8 +32,8 @@
 
 // global includes
 #include <memory>
-#include <vector>
 #include <string>
+#include <vector>
 
 // SST includes
 #include <sst/core/component.h>
@@ -51,43 +51,41 @@ class c_Channel;
 class c_BankGroup;
 class c_BankCommand;
 
-  class c_Rank {
-  public:
-
-    friend std::ostream& operator<<(std::ostream& x_stream,
-				    const c_Rank& x_rank) {
-      x_stream<<"Rank:"<<std::endl;
-      for(unsigned l_i=0; l_i<x_rank.m_bankGroupPtrs.size(); ++l_i) {
-	x_stream<<(x_rank.m_bankGroupPtrs.at(l_i))<<std::endl;
-      }
-
-      return (x_stream);
+class c_Rank {
+public:
+  friend std::ostream &operator<<(std::ostream &x_stream,
+                                  const c_Rank &x_rank) {
+    x_stream << "Rank:" << std::endl;
+    for (unsigned l_i = 0; l_i < x_rank.m_bankGroupPtrs.size(); ++l_i) {
+      x_stream << (x_rank.m_bankGroupPtrs.at(l_i)) << std::endl;
     }
 
-    c_Rank(std::map<std::string, unsigned>* x_bankParams);
-    virtual ~c_Rank();
+    return (x_stream);
+  }
 
-    void acceptBankGroup(c_BankGroup* x_bankGroupPtr);
-    void acceptChannel(c_Channel* x_channelPtr);
+  c_Rank(std::map<std::string, unsigned> *x_bankParams);
+  virtual ~c_Rank();
 
-    unsigned getNumBanks() const;
-    unsigned getNumBankGroups() const;
-      c_Channel* getChannelPtr() const;
+  void acceptBankGroup(c_BankGroup *x_bankGroupPtr);
+  void acceptChannel(c_Channel *x_channelPtr);
 
+  unsigned getNumBanks() const;
+  unsigned getNumBankGroups() const;
+  c_Channel *getChannelPtr() const;
 
-    std::vector<c_BankInfo*>& getBankPtrs();
+  std::vector<c_BankInfo *> &getBankPtrs();
 
-    void updateOtherBanksNextCommandCycles(c_BankGroup* x_initBankGroupPtr,
-					   c_BankCommand* x_cmdPtr, SimTime_t x_cycle);
+  void updateOtherBanksNextCommandCycles(c_BankGroup *x_initBankGroupPtr,
+                                         c_BankCommand *x_cmdPtr,
+                                         SimTime_t x_cycle);
 
-  private:
-    c_Channel* m_channelPtr;
-    std::vector<c_BankGroup*> m_bankGroupPtrs;
-      std::vector<c_BankInfo*> m_allBankPtrs;
-    std::map<std::string, unsigned>* m_bankParams;
+private:
+  c_Channel *m_channelPtr;
+  std::vector<c_BankGroup *> m_bankGroupPtrs;
+  std::vector<c_BankInfo *> m_allBankPtrs;
+  std::map<std::string, unsigned> *m_bankParams;
+};
 
-  };
-
-} // end CramSim
-} // end SST
+} // namespace CramSim
+} // namespace SST
 #endif /* C_RANK_HPP_ */

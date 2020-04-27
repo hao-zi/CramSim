@@ -30,9 +30,9 @@
 #define C_BANKINFO_HPP
 
 // C++ includes
-#include <memory>
 #include <list>
 #include <map>
+#include <memory>
 
 // CramSim includes
 #include "c_BankState.hpp"
@@ -46,91 +46,71 @@ enum class e_BankCommandType;
 
 class c_BankInfo {
 public:
+  c_BankInfo();
+  c_BankInfo(std::map<std::string, unsigned> *x_bankParams, unsigned x_bankId);
 
-	c_BankInfo();
-	c_BankInfo(std::map<std::string, unsigned>* x_bankParams,
-			unsigned x_bankId);
+  virtual ~c_BankInfo();
 
-	virtual ~c_BankInfo();
+  void handleCommand(c_BankCommand *x_bankCommandPtr, SimTime_t x_simCycle);
 
-	void handleCommand(c_BankCommand* x_bankCommandPtr, SimTime_t x_simCycle);
+  void clockTic(SimTime_t x_cycle);
 
-	void clockTic(SimTime_t x_cycle);
+  std::list<e_BankCommandType> getAllowedCommands();
 
-	std::list<e_BankCommandType> getAllowedCommands();
+  bool isCommandAllowed(c_BankCommand *x_cmdPtr, SimTime_t x_simCycle);
 
-	bool isCommandAllowed(c_BankCommand* x_cmdPtr, SimTime_t x_simCycle);
+  e_BankState getCurrentState() { return (m_bankState->getCurrentState()); }
 
-	e_BankState getCurrentState() {
-		return (m_bankState->getCurrentState());
-	}
+  void changeState(c_BankState *x_newState);
 
-	void changeState(c_BankState* x_newState);
+  void setNextCommandCycle(const e_BankCommandType x_cmd,
+                           const SimTime_t x_cycle);
+  SimTime_t getNextCommandCycle(e_BankCommandType x_cmd);
 
-	void setNextCommandCycle(const e_BankCommandType x_cmd,
-			const SimTime_t x_cycle);
-	SimTime_t getNextCommandCycle(e_BankCommandType x_cmd);
+  void setLastCommandCycle(e_BankCommandType x_cmd, SimTime_t x_lastCycle);
+  SimTime_t getLastCommandCycle(e_BankCommandType x_cmd);
 
-	void setLastCommandCycle(e_BankCommandType x_cmd, SimTime_t x_lastCycle);
-	SimTime_t getLastCommandCycle(e_BankCommandType x_cmd);
+  void acceptBankGroup(c_BankGroup *x_bankGroupPtr);
 
-	void acceptBankGroup(c_BankGroup* x_bankGroupPtr);
+  bool isRowOpen() const { return (m_isRowOpen); }
+  void setRowOpen() { m_isRowOpen = true; }
+  void resetRowOpen() { m_isRowOpen = false; }
+  void setOpenRowNum(const unsigned x_openRowNum) {
+    m_openRowNum = x_openRowNum;
+  }
+  unsigned getOpenRowNum() const { return (m_openRowNum); }
+  void setAutoPreTimer(SimTime_t x_timerVal) {
+    m_autoPrechargeTimer = x_timerVal;
+  }
+  SimTime_t getAutoPreTimer() { return (m_autoPrechargeTimer); }
+  void setBankId(const unsigned x_bankId) { m_bankId = x_bankId; }
 
-	bool isRowOpen() const {
-		return (m_isRowOpen);
-	}
-	void setRowOpen() {
-		m_isRowOpen = true;
-	}
-	void resetRowOpen() {
-		m_isRowOpen = false;
-	}
-	void setOpenRowNum(const unsigned x_openRowNum) {
-		m_openRowNum = x_openRowNum;
-	}
-	unsigned getOpenRowNum() const {
-		return (m_openRowNum);
-	}
-	void setAutoPreTimer(SimTime_t x_timerVal) {
-		m_autoPrechargeTimer = x_timerVal;
-	}
-	SimTime_t getAutoPreTimer() {
-		return (m_autoPrechargeTimer);
-	}
-	void setBankId(const unsigned x_bankId) {
-		m_bankId=x_bankId;
-	}
+  void print();
+  unsigned getBankId() { return m_bankId; }
 
-	void print();
-        unsigned getBankId() {
-	  return m_bankId;
-	}
+  c_BankGroup *getBankGroupPtr() { return m_bankGroupPtr; }
 
-	c_BankGroup *getBankGroupPtr() {
-	  return m_bankGroupPtr;
-	}
 private:
-	void reset();
+  void reset();
 
-	unsigned m_bankId;
+  unsigned m_bankId;
 
-	bool m_isRowOpen;
-	unsigned m_openRowNum;
+  bool m_isRowOpen;
+  unsigned m_openRowNum;
 
-	c_BankState* m_bankState;
-	c_BankGroup* m_bankGroupPtr;
+  c_BankState *m_bankState;
+  c_BankGroup *m_bankGroupPtr;
 
-	std::map<std::string, unsigned>* m_bankParams;
-	std::map<e_BankCommandType, SimTime_t> m_lastCommandCycleMap;
-	std::map<e_BankCommandType, SimTime_t> m_nextCommandCycleMap;
+  std::map<std::string, unsigned> *m_bankParams;
+  std::map<e_BankCommandType, SimTime_t> m_lastCommandCycleMap;
+  std::map<e_BankCommandType, SimTime_t> m_nextCommandCycleMap;
 
-	//TESTING -- DELETE
-	std::map<e_BankCommandType, std::string> m_cmdToString;
+  // TESTING -- DELETE
+  std::map<e_BankCommandType, std::string> m_cmdToString;
 
-	SimTime_t m_autoPrechargeTimer; // used to model a pseudo-open page policy
-
+  SimTime_t m_autoPrechargeTimer; // used to model a pseudo-open page policy
 };
-}
-}
+} // namespace CramSim
+} // namespace SST
 
 #endif // C_BANKINFO_HPP

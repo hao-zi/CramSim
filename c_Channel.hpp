@@ -32,8 +32,8 @@
 
 // global includes
 #include <memory>
-#include <vector>
 #include <string>
+#include <vector>
 
 // SST includes
 #include <sst/core/component.h>
@@ -51,40 +51,39 @@ class c_BankCommand;
 
 class c_Channel {
 public:
+  friend std::ostream &operator<<(std::ostream &x_stream,
+                                  const c_Channel &x_channel) {
+    x_stream << "Rank:" << std::endl;
+    for (unsigned l_i = 0; l_i < x_channel.m_rankPtrs.size(); ++l_i) {
+      x_stream << (x_channel.m_rankPtrs.at(l_i)) << std::endl;
+    }
 
-	friend std::ostream& operator<<(std::ostream& x_stream,
-			const c_Channel& x_channel) {
-		x_stream << "Rank:" << std::endl;
-		for (unsigned l_i = 0; l_i < x_channel.m_rankPtrs.size(); ++l_i) {
-			x_stream << (x_channel.m_rankPtrs.at(l_i)) << std::endl;
-		}
+    return x_stream;
+  }
 
-		return x_stream;
-	}
+  c_Channel(std::map<std::string, unsigned> *x_bankParams);
+  c_Channel(std::map<std::string, unsigned> *x_bankParams, unsigned x_chId);
 
-	c_Channel(std::map<std::string, unsigned>* x_bankParams);
-	c_Channel(std::map<std::string, unsigned>* x_bankParams, unsigned x_chId);
+  virtual ~c_Channel();
 
-	virtual ~c_Channel();
+  void acceptRank(c_Rank *x_rankPtr);
 
-	void acceptRank(c_Rank* x_rankPtr);
+  unsigned getNumBanks() const;
+  unsigned getNumRanks() const;
+  unsigned getChannelId() const;
 
-	unsigned getNumBanks() const;
-	unsigned getNumRanks() const;
-	unsigned getChannelId() const;
+  std::vector<c_BankInfo *> getBankPtrs() const;
 
-	std::vector<c_BankInfo*> getBankPtrs() const;
-
-	void updateOtherBanksNextCommandCycles(c_Rank* x_initRankPtr,
-			c_BankCommand* x_cmdPtr, SimTime_t x_cycle);
+  void updateOtherBanksNextCommandCycles(c_Rank *x_initRankPtr,
+                                         c_BankCommand *x_cmdPtr,
+                                         SimTime_t x_cycle);
 
 private:
-	std::vector<c_Rank*> m_rankPtrs;
-	std::map<std::string, unsigned>* m_bankParams;
-	unsigned m_chId;
-
+  std::vector<c_Rank *> m_rankPtrs;
+  std::map<std::string, unsigned> *m_bankParams;
+  unsigned m_chId;
 };
 
-} // end CramSim
-} // end SST
+} // namespace CramSim
+} // namespace SST
 #endif /* C_CHANNEL_HPP_ */

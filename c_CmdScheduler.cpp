@@ -28,12 +28,12 @@
 // limitations under the License.
 #include <sst/core/sst_config.h>
 
+#include <algorithm>
+#include <assert.h>
+#include <list>
+#include <map>
 #include <string>
 #include <vector>
-#include <list>
-#include <algorithm>
-#include <map>
-#include <assert.h>
 
 #include "c_CmdScheduler.hpp"
 #include "c_DeviceDriver.hpp"
@@ -41,116 +41,115 @@
 using namespace SST;
 using namespace SST::CramSim;
 
-
-c_CmdScheduler::c_CmdScheduler(ComponentId_t id, Params &x_params, Output* out, c_DeviceDriver* driver) : SubComponent(id), output(out), m_deviceController(driver) {
-    build(x_params);
+c_CmdScheduler::c_CmdScheduler(ComponentId_t id, Params &x_params, Output *out,
+                               c_DeviceDriver *driver)
+    : SubComponent(id), output(out), m_deviceController(driver) {
+  build(x_params);
 }
 
 void c_CmdScheduler::build(Params &x_params) {
-    m_numBanks=m_deviceController->getTotalNumBank();
-    m_numChannels=m_deviceController->getNumChannel();
-    m_numRanksPerChannel=m_deviceController->getNumRanksPerChannel();
-    m_numBanksPerChannel=m_numBanks/m_numChannels;
-    m_numBanksPerRank = m_numBanks/m_numRanksPerChannel;
+  m_numBanks = m_deviceController->getTotalNumBank();
+  m_numChannels = m_deviceController->getNumChannel();
+  m_numRanksPerChannel = m_deviceController->getNumRanksPerChannel();
+  m_numBanksPerChannel = m_numBanks / m_numChannels;
+  m_numBanksPerRank = m_numBanks / m_numRanksPerChannel;
 
-    assert(m_numBanks>0);
-    m_cmdQueues.clear();
+  assert(m_numBanks > 0);
+  m_cmdQueues.clear();
 
-    m_cmdQueues.resize(m_numChannels);
-    m_nextCmdQIdx.resize(m_numChannels);
-    for(unsigned l_ch=0;l_ch<m_numChannels;l_ch++) {
-        m_nextCmdQIdx.at(l_ch)=0;
-        for (unsigned l_bankIdx = 0; l_bankIdx < m_numBanks; l_bankIdx++) {
-            m_cmdQueues.at(l_ch).resize(m_numBanksPerChannel);
-        }
+  m_cmdQueues.resize(m_numChannels);
+  m_nextCmdQIdx.resize(m_numChannels);
+  for (unsigned l_ch = 0; l_ch < m_numChannels; l_ch++) {
+    m_nextCmdQIdx.at(l_ch) = 0;
+    for (unsigned l_bankIdx = 0; l_bankIdx < m_numBanks; l_bankIdx++) {
+      m_cmdQueues.at(l_ch).resize(m_numBanksPerChannel);
     }
+  }
 
-    bool l_found = false;
-    k_numCmdQEntries = (uint32_t) x_params.find<uint32_t>("numCmdQEntries", 32, l_found);
-    if (!l_found) {
-        std::cout << "numCmdQEntries value is missing... it will be 32 (default)" << std::endl;
-    }
+  bool l_found = false;
+  k_numCmdQEntries =
+      (uint32_t)x_params.find<uint32_t>("numCmdQEntries", 32, l_found);
+  if (!l_found) {
+    std::cout << "numCmdQEntries value is missing... it will be 32 (default)"
+              << std::endl;
+  }
 
-    std::string l_cmdSchedulingPolicy = (std::string) x_params.find<std::string>("cmdSchedulingPolicy", "BANK", l_found);
-    if (!l_found) {
-        std::cout << "cmdScheduligPolicy is missing... it will be \"bank round robin\" (default)" << std::endl;
-    }
-    if(l_cmdSchedulingPolicy=="BANK")
-        m_schedulingPolicy = e_SchedulingPolicy::BANK;  //Bank Round Robin
-    else if(l_cmdSchedulingPolicy=="RANK")
-        m_schedulingPolicy = e_SchedulingPolicy::RANK;  //Rank Round Robin
-    else
-    {
-        std::cout << "CmdScheduler: scheduling policy error!\n";
-        exit(-1);
-    }
+  std::string l_cmdSchedulingPolicy = (std::string)x_params.find<std::string>(
+      "cmdSchedulingPolicy", "BANK", l_found);
+  if (!l_found) {
+    std::cout << "cmdScheduligPolicy is missing... it will be \"bank round "
+                 "robin\" (default)"
+              << std::endl;
+  }
+  if (l_cmdSchedulingPolicy == "BANK")
+    m_schedulingPolicy = e_SchedulingPolicy::BANK; // Bank Round Robin
+  else if (l_cmdSchedulingPolicy == "RANK")
+    m_schedulingPolicy = e_SchedulingPolicy::RANK; // Rank Round Robin
+  else {
+    std::cout << "CmdScheduler: scheduling policy error!\n";
+    exit(-1);
+  }
 }
 
+c_CmdScheduler::~c_CmdScheduler() {}
 
-c_CmdScheduler::~c_CmdScheduler(){
-}
+void c_CmdScheduler::run(SimTime_t simCycle) {
 
+  bool isSuccess = false;
+  c_BankCommand *l_cmdPtr = nullptr;
+  SimTime_t l_time = simCycle;
 
+  for (unsigned l_ch = 0; l_ch < m_numChannels; l_ch++) {
 
-void c_CmdScheduler::run(SimTime_t simCycle){
+    unsigned nextBankIdx = m_nextCmdQIdx.at(l_ch);
+    for (unsigned i = 0; i < m_numBanksPerChannel; i++) {
+      c_CmdQueue &l_cmdQueue = m_cmdQueues[l_ch].at(nextBankIdx);
 
-    bool isSuccess = false;
-    c_BankCommand *l_cmdPtr= nullptr;
-    SimTime_t  l_time=simCycle;
+      if (!l_cmdQueue.empty()) {
+        l_cmdPtr = l_cmdQueue.front();
 
-    for(unsigned l_ch=0;l_ch<m_numChannels;l_ch++) {
-
-        unsigned nextBankIdx = m_nextCmdQIdx.at(l_ch);
-        for (unsigned i = 0; i < m_numBanksPerChannel; i++) {
-            c_CmdQueue &l_cmdQueue = m_cmdQueues[l_ch].at(nextBankIdx);
-
-            if (!l_cmdQueue.empty()) {
-                l_cmdPtr = l_cmdQueue.front();
-
-                if (m_deviceController->isCmdAllowed(l_cmdPtr)) {
-                    isSuccess = m_deviceController->push(l_cmdPtr);
-                    if (isSuccess) {
-                        l_cmdQueue.pop_front();
+        if (m_deviceController->isCmdAllowed(l_cmdPtr)) {
+          isSuccess = m_deviceController->push(l_cmdPtr);
+          if (isSuccess) {
+            l_cmdQueue.pop_front();
 
 #ifdef __SST_DEBUG_OUTPUT__
-                        l_cmdPtr->print(output, "[c_CmdScheduler]", simCycle);
+            l_cmdPtr->print(output, "[c_CmdScheduler]", simCycle);
 #endif
-                    }
-                }
-            }
-
-            if(m_schedulingPolicy==e_SchedulingPolicy::BANK)
-                nextBankIdx = (nextBankIdx + 1) % m_numBanksPerChannel;
-            else if(m_schedulingPolicy==e_SchedulingPolicy::RANK)
-                nextBankIdx=(nextBankIdx+m_numBanksPerRank)%(m_numBanksPerChannel-1);
-
+          }
         }
-        if(m_schedulingPolicy==e_SchedulingPolicy::BANK)
-            m_nextCmdQIdx.at(l_ch)=(m_nextCmdQIdx.at(l_ch)+1)%m_numBanksPerChannel;
-        else if(m_schedulingPolicy==e_SchedulingPolicy::RANK)
-            m_nextCmdQIdx.at(l_ch)=(m_nextCmdQIdx.at(l_ch)+m_numBanksPerRank)%(m_numBanksPerChannel-1);
+      }
+
+      if (m_schedulingPolicy == e_SchedulingPolicy::BANK)
+        nextBankIdx = (nextBankIdx + 1) % m_numBanksPerChannel;
+      else if (m_schedulingPolicy == e_SchedulingPolicy::RANK)
+        nextBankIdx =
+            (nextBankIdx + m_numBanksPerRank) % (m_numBanksPerChannel - 1);
     }
+    if (m_schedulingPolicy == e_SchedulingPolicy::BANK)
+      m_nextCmdQIdx.at(l_ch) =
+          (m_nextCmdQIdx.at(l_ch) + 1) % m_numBanksPerChannel;
+    else if (m_schedulingPolicy == e_SchedulingPolicy::RANK)
+      m_nextCmdQIdx.at(l_ch) = (m_nextCmdQIdx.at(l_ch) + m_numBanksPerRank) %
+                               (m_numBanksPerChannel - 1);
+  }
 }
 
+bool c_CmdScheduler::push(c_BankCommand *x_cmd) {
+  unsigned l_ch = x_cmd->getHashedAddress()->getChannel();
+  unsigned l_bank =
+      x_cmd->getHashedAddress()->getBankId() % m_numBanksPerChannel;
 
-bool c_CmdScheduler::push(c_BankCommand* x_cmd) {
-    unsigned l_ch=x_cmd->getHashedAddress()->getChannel();
-    unsigned l_bank=x_cmd->getHashedAddress()->getBankId() % m_numBanksPerChannel;
-
-    if (m_cmdQueues[l_ch].at(l_bank).size() < k_numCmdQEntries) {
-        m_cmdQueues[l_ch].at(l_bank).push_back(x_cmd);
-        return true;
-    } else
-        return false;
-
+  if (m_cmdQueues[l_ch].at(l_bank).size() < k_numCmdQEntries) {
+    m_cmdQueues[l_ch].at(l_bank).push_back(x_cmd);
+    return true;
+  } else
+    return false;
 }
 
+unsigned c_CmdScheduler::getToken(const c_HashedAddress &x_addr) {
+  unsigned l_ch = x_addr.getChannel();
+  unsigned l_bank = x_addr.getBankId() % m_numBanksPerChannel;
 
-unsigned c_CmdScheduler::getToken(const c_HashedAddress &x_addr)
-{
-    unsigned l_ch=x_addr.getChannel();
-    unsigned l_bank=x_addr.getBankId() % m_numBanksPerChannel;
-
-    return k_numCmdQEntries-m_cmdQueues[l_ch].at(l_bank).size();
-
+  return k_numCmdQEntries - m_cmdQueues[l_ch].at(l_bank).size();
 }

@@ -31,68 +31,65 @@
 #define C_CMDSCHEDULER_HPP
 
 #include "c_BankCommand.hpp"
+#include "c_Controller.hpp"
 #include "c_DeviceDriver.hpp"
 #include "c_HashedAddress.hpp"
-#include "c_Controller.hpp"
 
-namespace SST{
-    namespace CramSim {
-        class c_DeviceDriver;
-        class c_Controller;
+namespace SST {
+namespace CramSim {
+class c_DeviceDriver;
+class c_Controller;
 
-        class c_CmdScheduler : public SubComponent{
-        public:
+class c_CmdScheduler : public SubComponent {
+public:
+  SST_ELI_REGISTER_SUBCOMPONENT_API(SST::CramSim::c_CmdScheduler, Output *,
+                                    c_DeviceDriver *)
 
-            SST_ELI_REGISTER_SUBCOMPONENT_API(SST::CramSim::c_CmdScheduler, Output*, c_DeviceDriver*)
+  SST_ELI_REGISTER_SUBCOMPONENT_DERIVED(c_CmdScheduler, "CramSim",
+                                        "c_CmdScheduler",
+                                        SST_ELI_ELEMENT_VERSION(1, 0, 0),
+                                        "Command Scheduler",
+                                        SST::CramSim::c_CmdScheduler)
 
-            SST_ELI_REGISTER_SUBCOMPONENT_DERIVED(
-                c_CmdScheduler,
-                "CramSim",
-                "c_CmdScheduler",
-                SST_ELI_ELEMENT_VERSION(1,0,0),
-                "Command Scheduler",
-                SST::CramSim::c_CmdScheduler
-            )
+  SST_ELI_DOCUMENT_PARAMS(
+      {"numCmdQEntries",
+       "The number of entries in command scheduler's command queue"},
+      {"cmdSchedulingPolicy", "", "BANK"})
 
-            SST_ELI_DOCUMENT_PARAMS(
-                {"numCmdQEntries", "The number of entries in command scheduler's command queue"},
-                {"cmdSchedulingPolicy", "", "BANK"}
-            )
+  SST_ELI_DOCUMENT_PORTS()
 
-            SST_ELI_DOCUMENT_PORTS(
-            )
+  SST_ELI_DOCUMENT_STATISTICS()
 
-            SST_ELI_DOCUMENT_STATISTICS(
-            )
+  c_CmdScheduler(ComponentId_t id, Params &x_params, Output *out,
+                 c_DeviceDriver *);
+  void build(Params &x_params);
+  ~c_CmdScheduler();
 
-            c_CmdScheduler(ComponentId_t id, Params &x_params, Output* out, c_DeviceDriver*);
-            void build(Params &x_params);
-            ~c_CmdScheduler();
+  void run(SimTime_t simCycle);
+  bool push(c_BankCommand *x_cmd);
+  unsigned getToken(const c_HashedAddress &x_addr);
 
-            void run(SimTime_t simCycle);
-            bool push(c_BankCommand* x_cmd);
-            unsigned getToken(const c_HashedAddress &x_addr);
+private:
+  enum e_SchedulingPolicy { BANK, RANK };
+  typedef std::deque<c_BankCommand *> c_CmdQueue;
 
+  c_DeviceDriver *m_deviceController;
 
-        private:
-            enum e_SchedulingPolicy {BANK, RANK};
-            typedef std::deque<c_BankCommand*> c_CmdQueue;
+  std::vector<std::vector<c_CmdQueue>>
+      m_cmdQueues; // per-bank command queue for each channel
+  std::vector<unsigned>
+      m_nextCmdQIdx; // index for command queue scheduling (Round Robin)
 
-            c_DeviceDriver* m_deviceController;
+  Output *output;
+  unsigned m_numBanks;
+  unsigned m_numChannels;
+  unsigned m_numRanksPerChannel;
+  unsigned m_numBanksPerChannel;
+  unsigned m_numBanksPerRank;
+  unsigned k_numCmdQEntries;
 
-            std::vector<std::vector<c_CmdQueue>> m_cmdQueues;  //per-bank command queue for each channel
-            std::vector<unsigned> m_nextCmdQIdx;                //index for command queue scheduling (Round Robin)
-
-            Output* output;
-            unsigned m_numBanks;
-            unsigned m_numChannels;
-            unsigned m_numRanksPerChannel;
-            unsigned m_numBanksPerChannel;
-            unsigned m_numBanksPerRank;
-            unsigned k_numCmdQEntries;
-
-            enum e_SchedulingPolicy m_schedulingPolicy;
-        };
-    }
-}
-#endif //SRC_C_CMDSCHEDULER_HPP
+  enum e_SchedulingPolicy m_schedulingPolicy;
+};
+} // namespace CramSim
+} // namespace SST
+#endif // SRC_C_CMDSCHEDULER_HPP
